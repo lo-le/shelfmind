@@ -2,77 +2,80 @@
 
 **EAT_HACK 2026 · Human Truth track**
 
-> Pre-test a promotion, or a new challenger brand, on a swarm of synthetic
-> shoppers *before you spend a penny on the real one*, and see why it moves the
-> shelf, shopper by shopper.
+> Pre-test a Tesco promo against the big-6 before you spend a penny on it, and
+> see where the volume really comes from.
 
-A promotion is a behavioural lever. ShelfMind simulates a population of
-behaviourally-distinct shopper agents choosing on a shelf, then shows not just
-the predicted sales lift but **why** it happens: how much of the uplift is
-genuinely incremental vs cannibalised from the brand's own lines vs stolen from
-competitors, which shopper segments moved, and the **say-do gap** between what
-shoppers claim to value and what they actually buy.
+ShelfMind simulates a population of behaviourally-distinct shopper agents
+deciding **where to buy a product** - Tesco, or a competitor supermarket
+(Sainsbury's, Asda, Morrisons, Aldi, Lidl), or a Tesco substitute line, or not at
+all. You put a Tesco Clubcard promo on one product and watch the swarm move, then
+read the only number that matters to a promotions analyst: **how much of the
+uplift is actually incremental to Tesco** versus cannibalised from its own lines.
 
 ![Human Truth track](https://img.shields.io/badge/track-Human%20Truth-2fe6b0)
 
 ## Why this is more than a prompt wrapper
 
 The intelligence is an **agent-based simulation with a transparent choice
-model** - not an LLM. The language model is used *only* to narrate numbers the
-simulation has already computed, and is instructed to invent nothing.
+model**, not an LLM. The language model only narrates figures the simulation has
+already computed, and is told to invent nothing.
 
 - **Heterogeneous agents.** Each shopper is a vector of behavioural weights
-  (value, loss-aversion/deal-seeking, social proof, habit, health, novelty,
-  taste, convenience) drawn from illustrative grocery segments.
+  (value, deal-seeking/loss-aversion, social proof, store loyalty, health,
+  novelty, taste, convenience) drawn from illustrative grocery segments, plus a
+  **home retailer** sampled from that segment's store affinity.
 - **They interact.** Social-proof-driven shoppers re-weight toward whatever
-  earlier shoppers already chose, so the swarm can **tip** - a challenger brand
-  ignored at low visibility can run away once it crosses a threshold. This
-  emergence is why we run a *swarm*, not N independent draws.
-- **Clean causal read-out.** Baseline (no promo) and promo runs reuse the same
-  Gumbel noise per agent (*common random numbers*), so the difference between
-  the two runs is the promo's causal effect and we can trace exactly which
-  shoppers switched and from where.
+  earlier shoppers already chose, so the swarm can herd.
+- **Clean causal read-out.** Baseline (Tesco at base price) and promo runs reuse
+  the same Gumbel noise per agent (common random numbers), so the difference is
+  the promo's causal effect and we can trace every switcher's origin.
+
+## The decomposition (what the job actually needs)
+
+Competitors here are **retailers**, not brands. When Tesco's promo grows the
+promoted line, ShelfMind splits that gain into:
+
+- **Cannibalised** - moved off a Tesco substitute line. Stays within Tesco; a
+  margin give-away, not incremental.
+- **Won from competitors** - moved off another retailer (by retailer). Truly
+  incremental to Tesco.
+- **New demand** - was not going to buy at all. Incremental.
+
+**Net incremental to Tesco = won from competitors + new demand.**
 
 ## The maths (the bit judges asked us to show)
 
-Each shopper makes a discrete choice over the products plus a "walk away"
-outside option using a random-utility (multinomial logit) model. For shopper *i*
-and product *j*:
+Each shopper faces the set of options for one product (the product at each
+retailer that stocks it, plus Tesco substitutes) and a "don't buy" outside
+option, and picks the highest-utility one (a random-utility / multinomial logit
+model). For shopper *i* and option *o*:
 
 ```
-U_ij = V_ij + g_ij            (g_ij = i.i.d. Gumbel noise  →  logit choice)
+U_io = V_io + g_io            (g_io i.i.d. Gumbel noise -> logit choice)
 
-V_ij =  Kv ·value        ·(1 − price_norm)
-      + Kd ·deal_seeking ·perceived_saving ·saving_salience   ← Clubcard price anchor (loss aversion)
-      + Ks ·social_proof ·social_proof_j                       ← updated live by the swarm
-      + Kh ·habit_loyalty·familiarity_j                        ← brand loyalty / habit
-      + Khe·health       ·health_j
-      + Kn ·novelty      ·novelty_j
-      + Kt ·taste        ·taste_j
-      + Kc ·convenience  ·convenience_j
-      − budget_penalty (if they can't afford it)
+V_io =  Kprice * value       * (1 - price_norm_o)
+      + Kdeal  * deal_seeking * saving_o * salience_o      (any live promo, incl competitors')
+      + Kret   * [ retailer_appeal_r + home_bonus*loyalty if r is the shopper's home store ]
+      + Kappeal* [ product_pull + health/novelty/taste matched to the shopper ]
+      + Ks     * social_proof * social_proof_o             (updated live by the swarm)
+      + Kconv  * convenience  * retailer_convenience_r
+      - budget_penalty (if they cannot afford it)
 ```
 
-The shopper picks `argmax` over products and the outside option. Every
-coefficient lives in one place (`choice.py → PARAMS`) so the model is
-inspectable and tunable. We use Tesco's pricing terms: **base price** (no promo),
-**shelf price** (the Clubcard price under a price cut), and **best price** (the
-per-unit price under a multibuy). Because every offer is a Clubcard price, the
-saving is always anchored against the base price (a built-in loss-aversion
-frame); a multibuy sets a lower best price but loads the basket (you must buy
-more than one).
+Pricing uses Tesco's terms: **base price** (no promo), **shelf price** (Clubcard
+price cut), **best price** (per-unit multibuy). Every Tesco offer is modelled as a
+Clubcard price, so the saving is anchored against the base price (a built-in
+loss-aversion frame). All coefficients live in `choice.py -> PARAMS`.
 
 ## What it outputs
 
-- **Extra units**, and the honest split: **truly incremental** (new to category)
-  vs **cannibalised** (own lines) vs **stolen from competitors**.
-- **Say-do gap** - e.g. the % of shoppers who say value/health matters most but
-  bought against it, and how the promo widens or narrows that gap.
-- **Which segments** the promo won, and a **tipping-dynamics** chart of the
-  promoted product's share as the swarm grows (baseline vs promo).
-- **Sample shoppers** with their actual decision reasoning.
-- A plain-English **AI explanation** narrating the figures and tying them to
-  named behavioural principles.
+- **Extra Tesco units** of the promoted line (baseline to promo), split into
+  cannibalised / won from competitors / new demand, with **net incremental**.
+- **Competitor price table** - each big-6 retailer's current base and promo
+  price for the product (and where it is not stocked).
+- **Before to after by retailer** - who lost the shoppers Tesco gained.
+- **Switchers by segment**, and sampled shoppers with their decision reasoning.
+- A plain-English **AI explanation** tying the figures to behavioural drivers.
 
 ## Run it
 
@@ -91,49 +94,45 @@ python app.py
 ```
 
 The swarm runs on deterministic maths and needs no API key; the key only powers
-the natural-language AI explanation (narration) layer.
+the AI explanation.
 
 ## Architecture
 
 | File | Role |
 | --- | --- |
-| `personas.py` | Draws a reproducible population from behavioural segments. |
-| `choice.py` | The choice engine - the random-utility maths and promo mechanics. |
-| `swarm.py` | The interacting swarm, paired baseline/promo runs, and the switching decomposition + say-do metrics. |
-| `explain.py` | LLM narration layer (OpenAI) - narrates numbers only. |
+| `personas.py` | Draws the population: behavioural weights + a home retailer per segment. |
+| `choice.py` | The choice engine: random-utility maths and Tesco promo mechanics. |
+| `swarm.py` | The interacting swarm, paired baseline/promo runs, and the cannibalised / competitor / new-demand decomposition. |
+| `explain.py` | LLM narration layer (OpenAI), narrates numbers only. |
 | `app.py` | FastAPI backend: `/api/simulate` and `/api/narrate`. |
-| `templates/index.html` | Single-page UI: animated swarm, metrics, charts, narrative. |
-| `data/shelf.json` | Editable demo shelves (swap in real brands). |
+| `templates/index.html` | Single-page UI: product picker, Tesco promo lever, swarm, decomposition, price table. |
+| `data/products.json` | The RGC products: Tesco base price, competitor prices/promos, Tesco substitutes. |
+| `data/retailers.json` | The big-6 retailers and each segment's store affinity. |
 
 ## Data & honesty
 
-There is **no proprietary data here**. The shopper segments are *synthetic
-archetypes* informed by well-known grocery segmentation patterns - plausible,
-but not calibrated to any loyalty-card panel. Results are **directionally
-useful, not a forecast**.
+The product set is real (RGC's EAT_HACK brands), but the **prices and shopper
+model are synthetic placeholders**: competitor prices in `data/products.json` are
+plausible, not live-scraped, and the segments are illustrative archetypes, not a
+loyalty-card panel. Results are **directionally useful, not a forecast**.
 
-**To make it real beyond the hack:** calibrate the segment weight vectors and
-the model coefficients to real loyalty-card choice data (e.g. Dunnhumby /
-Tesco Clubcard panels), then validate predicted lifts against historical
-promotion outcomes. `personas.py` and `choice.py → PARAMS` are the single places
-to recalibrate.
+**To make it real:** load live competitor prices into `data/products.json`, and
+calibrate the segment weights and `choice.py -> PARAMS` to real Clubcard /
+Dunnhumby choice data, then validate predicted lifts against historical promos.
 
-## Beyond the demo (scale, privacy, cost, limits)
+## Beyond the demo
 
 - **Scale.** The choice model is pure maths; the agent loop vectorises to tens of
-  thousands of agents. Social proof is the only sequential step and can be
-  batched into rounds.
-- **Privacy.** The simulation uses no personal data - agents are synthetic, so
-  there is no PII to leak. Calibration would run on aggregate, anonymised panel
-  statistics, not individual records.
-- **Cost.** The swarm is free and instant. The LLM is called once per run for
-  narration only, so cost is negligible and the core product works offline.
-- **Limitations.** Un-calibrated personas; a single shopping occasion (no
-  long-run habit formation or stockpiling across trips); within-category choice
-  only; social proof is a simple herding rule, not a full network model.
+  thousands of agents. Social proof is the only sequential step.
+- **Privacy.** No personal data: agents are synthetic. Calibration would use
+  aggregate, anonymised panel statistics, not individual records.
+- **Cost.** The swarm is free and instant; the LLM is one call per run, for
+  narration only.
+- **Limitations.** Synthetic prices and personas; competitors are static (no
+  simultaneous competitor promo or reaction); a single shopping occasion; social
+  proof is a simple herding rule.
 
 ## Built at EAT_HACK
 
-Fresh build on the day. No substantial pre-existing work. Stack: Python,
-FastAPI, NumPy, vanilla JS (hand-rolled SVG/Canvas, no chart libraries), OpenAI
-for the narration layer only.
+Fresh build on the day. Stack: Python, FastAPI, NumPy, vanilla JS (hand-rolled
+Canvas/SVG, no chart libraries), OpenAI for the narration layer only.
