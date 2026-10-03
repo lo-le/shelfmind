@@ -1,0 +1,46 @@
+{
+  "scenarios": [
+    {
+      "id": "choc",
+      "name": "Better-for-you chocolate",
+      "category": "Confectionery",
+      "description": "A market leader, a retailer value line, and three challenger brands fighting for the healthier-snacking shopper.",
+      "default_promo": {"target": "purebar", "type": "was_now", "depth": 0.25},
+      "products": [
+        {"id": "classic",     "name": "Classic Choc",            "brand": "Classic",   "owner": "Mondo",     "is_incumbent": true,  "price": 1.20, "ref_price": 1.20, "taste": 0.88, "familiarity": 0.95, "health": 0.12, "novelty": 0.08, "convenience": 0.85, "base_share": 0.40},
+        {"id": "value",       "name": "Smartsave Milk Choc",     "brand": "Smartsave", "owner": "Retailer",  "is_incumbent": false, "price": 0.75, "ref_price": 0.85, "taste": 0.62, "familiarity": 0.70, "health": 0.15, "novelty": 0.15, "convenience": 0.80, "base_share": 0.18},
+        {"id": "purebar",     "name": "PureBar Cacao 70%",       "brand": "PureBar",   "owner": "PureSnack", "is_incumbent": false, "price": 1.60, "ref_price": 1.60, "taste": 0.80, "familiarity": 0.35, "health": 0.62, "novelty": 0.70, "convenience": 0.55, "base_share": 0.10},
+        {"id": "purebar_nut", "name": "PureBar Hazelnut",        "brand": "PureBar",   "owner": "PureSnack", "is_incumbent": false, "price": 1.65, "ref_price": 1.65, "taste": 0.82, "familiarity": 0.33, "health": 0.55, "novelty": 0.68, "convenience": 0.55, "base_share": 0.07},
+        {"id": "protein",     "name": "FuelUp Protein Choc",     "brand": "FuelUp",    "owner": "FuelUp",    "is_incumbent": false, "price": 1.90, "ref_price": 1.90, "taste": 0.66, "familiarity": 0.30, "health": 0.72, "novelty": 0.78, "convenience": 0.60, "base_share": 0.09}
+      ]
+    },
+    {
+      "id": "drinks",
+      "name": "Functional soft drinks",
+      "category": "Soft drinks",
+      "description": "Two big-cola lines versus three challenger kombucha / gut-health sodas.",
+      "default_promo": {"target": "booch", "type": "multibuy", "depth": 0.30},
+      "products": [
+        {"id": "cola",    "name": "Mega Cola",            "brand": "Mega",     "owner": "Mega",     "is_incumbent": true,  "price": 1.10, "ref_price": 1.10, "taste": 0.85, "familiarity": 0.96, "health": 0.10, "novelty": 0.05, "convenience": 0.90, "base_share": 0.45},
+        {"id": "zero",    "name": "Mega Cola Zero",       "brand": "Mega",     "owner": "Mega",     "is_incumbent": false, "price": 1.10, "ref_price": 1.10, "taste": 0.78, "familiarity": 0.90, "health": 0.35, "novelty": 0.10, "convenience": 0.90, "base_share": 0.18},
+        {"id": "booch",   "name": "WildFizz Kombucha",    "brand": "WildFizz", "owner": "WildFizz", "is_incumbent": false, "price": 2.20, "ref_price": 2.20, "taste": 0.60, "familiarity": 0.25, "health": 0.80, "novelty": 0.85, "convenience": 0.50, "base_share": 0.08},
+        {"id": "gut",     "name": "GutGood Soda",         "brand": "GutGood",  "owner": "GutGood",  "is_incumbent": false, "price": 1.95, "ref_price": 1.95, "taste": 0.64, "familiarity": 0.22, "health": 0.78, "novelty": 0.82, "convenience": 0.55, "base_share": 0.07},
+        {"id": "sparkle", "name": "Hedgerow Sparkling",   "brand": "Hedgerow", "owner": "Hedgerow", "is_incumbent": false, "price": 1.80, "ref_price": 1.80, "taste": 0.70, "familiarity": 0.30, "health": 0.66, "novelty": 0.70, "convenience": 0.60, "base_share": 0.10}
+      ]
+    },
+    {
+      "id": "crisps",
+      "name": "Crisps & savoury snacks",
+      "category": "Savoury snacks",
+      "description": "A dominant crisp brand and its sibling line versus three challenger better-for-you snacks.",
+      "default_promo": {"target": "veggiepop", "type": "price_cut", "depth": 0.20},
+      "products": [
+        {"id": "crunch",     "name": "Crunch Classic",        "brand": "Crunch",    "owner": "Crunch",    "is_incumbent": true,  "price": 1.00, "ref_price": 1.00, "taste": 0.86, "familiarity": 0.95, "health": 0.18, "novelty": 0.08, "convenience": 0.88, "base_share": 0.42},
+        {"id": "crunchlite", "name": "Crunch Lightly Salted", "brand": "Crunch",    "owner": "Crunch",    "is_incumbent": false, "price": 1.00, "ref_price": 1.00, "taste": 0.78, "familiarity": 0.85, "health": 0.30, "novelty": 0.10, "convenience": 0.88, "base_share": 0.15},
+        {"id": "veggiepop",  "name": "VeggiePop Crisps",      "brand": "VeggiePop", "owner": "VeggiePop", "is_incumbent": false, "price": 1.50, "ref_price": 1.50, "taste": 0.66, "familiarity": 0.30, "health": 0.70, "novelty": 0.80, "convenience": 0.70, "base_share": 0.10},
+        {"id": "lentil",     "name": "Field & Fire Lentil",   "brand": "Field&Fire","owner": "FieldFire", "is_incumbent": false, "price": 1.60, "ref_price": 1.60, "taste": 0.64, "familiarity": 0.28, "health": 0.72, "novelty": 0.82, "convenience": 0.65, "base_share": 0.08},
+        {"id": "handcook",   "name": "SeaSalt Co Hand-Cooked", "brand": "SeaSalt",  "owner": "SeaSalt",   "is_incumbent": false, "price": 1.70, "ref_price": 1.70, "taste": 0.82, "familiarity": 0.35, "health": 0.40, "novelty": 0.60, "convenience": 0.70, "base_share": 0.12}
+      ]
+    }
+  ]
+}

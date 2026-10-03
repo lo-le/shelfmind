@@ -1,0 +1,381 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>ShelfMind — Synthetic Shopper Swarm</title>
+<style>
+  :root{
+    --bg:#0b1020; --panel:#121a2e; --panel2:#0f1627; --line:#22304d;
+    --ink:#e7ecf5; --muted:#90a0c0; --accent:#2fe6b0; --accent2:#e8a33d;
+    --danger:#e4572e; --good:#2fb380; --mono:"SF Mono",ui-monospace,Menlo,Consolas,monospace;
+    --sans:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:radial-gradient(1200px 600px at 70% -10%,#16213c 0,var(--bg) 60%);
+    color:var(--ink);font-family:var(--sans);font-size:14px;line-height:1.45}
+  a{color:var(--accent)}
+  header{display:flex;align-items:center;justify-content:space-between;gap:16px;
+    padding:14px 22px;border-bottom:1px solid var(--line);position:sticky;top:0;
+    background:rgba(11,16,32,.82);backdrop-filter:blur(8px);z-index:5}
+  .brand{display:flex;align-items:center;gap:12px}
+  .logo{width:30px;height:30px;border-radius:7px;background:
+    radial-gradient(circle at 30% 30%,var(--accent),#0a7f63);box-shadow:0 0 16px #2fe6b055}
+  .brand h1{font-size:16px;margin:0;letter-spacing:.3px}
+  .brand .sub{color:var(--muted);font-size:12px;margin-top:1px}
+  .badge{font-family:var(--mono);font-size:11px;color:#0b1020;background:var(--accent);
+    padding:4px 9px;border-radius:999px;font-weight:700;letter-spacing:.4px}
+  .wrap{display:grid;grid-template-columns:340px 1fr;gap:18px;padding:18px 22px;max-width:1400px;margin:0 auto}
+  .panel{background:linear-gradient(180deg,var(--panel),var(--panel2));border:1px solid var(--line);
+    border-radius:14px;padding:16px}
+  .panel h2{font-size:12px;text-transform:uppercase;letter-spacing:1px;color:var(--muted);
+    margin:0 0 12px;font-weight:600}
+  label.fld{display:block;font-size:12px;color:var(--muted);margin:12px 0 5px}
+  select,input[type=range]{width:100%}
+  select{background:var(--panel2);color:var(--ink);border:1px solid var(--line);border-radius:8px;
+    padding:9px 10px;font-family:var(--sans);font-size:13px}
+  .shelf{display:flex;flex-direction:column;gap:8px;margin-top:4px}
+  .prod{display:flex;gap:10px;align-items:center;padding:9px;border:1px solid var(--line);
+    border-radius:10px;cursor:pointer;transition:.12s;background:var(--panel2)}
+  .prod:hover{border-color:#36507e}
+  .prod.sel{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent) inset}
+  .prod input{accent-color:var(--accent);margin-top:2px}
+  .prod .nm{font-weight:600;font-size:13px}
+  .prod .px{font-family:var(--mono);color:var(--accent2);font-size:12px}
+  .prod .tag{font-size:10px;color:var(--muted);border:1px solid var(--line);border-radius:5px;
+    padding:1px 5px;margin-left:6px}
+  .attrs{display:flex;gap:7px;margin-top:5px}
+  .attr{flex:1}
+  .attr span{font-size:9px;color:var(--muted);display:block;margin-bottom:2px}
+  .bar{height:4px;border-radius:3px;background:#1d2a45;overflow:hidden}
+  .bar>i{display:block;height:100%;background:var(--accent)}
+  .depthrow{display:flex;justify-content:space-between;font-family:var(--mono);font-size:12px;color:var(--muted)}
+  button.run{margin-top:16px;width:100%;padding:12px;border:none;border-radius:10px;cursor:pointer;
+    background:linear-gradient(90deg,var(--accent),#1fc79a);color:#06231b;font-weight:800;font-size:14px;
+    letter-spacing:.3px;box-shadow:0 6px 18px #2fe6b033}
+  button.run:active{transform:translateY(1px)}
+  button.ghost{background:transparent;color:var(--muted);border:1px solid var(--line);border-radius:8px;
+    padding:7px 10px;cursor:pointer;font-size:12px;margin-top:8px;width:100%}
+  .main{display:flex;flex-direction:column;gap:18px;min-width:0}
+  .stagewrap{position:relative}
+  .stagehead{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:8px}
+  .phaselbl{font-family:var(--mono);font-size:12px;color:var(--accent2)}
+  #stage{width:100%;height:300px;display:block;background:
+    linear-gradient(180deg,#0c1324 0,#0b1020 100%);border-radius:10px}
+  .bins{display:flex;margin-top:6px}
+  .bin{flex:1;text-align:center;font-size:11px;color:var(--muted);padding:0 2px}
+  .bin b{display:block;color:var(--ink);font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .bin .ct{font-family:var(--mono);font-size:12px}
+  .bin.promoted b{color:var(--accent)}
+  .bin.nobuy b{color:var(--muted)}
+  .cards{display:grid;grid-template-columns:repeat(5,1fr);gap:12px}
+  .card{background:var(--panel2);border:1px solid var(--line);border-radius:12px;padding:12px}
+  .card .k{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px}
+  .card .v{font-family:var(--mono);font-size:24px;font-weight:700;margin-top:6px}
+  .card .d{font-size:11px;color:var(--muted);margin-top:3px}
+  .v.good{color:var(--good)} .v.warn{color:var(--accent2)} .v.bad{color:var(--danger)} .v.ac{color:var(--accent)}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+  .chart svg{width:100%;height:210px}
+  .legend{display:flex;gap:14px;flex-wrap:wrap;font-size:11px;color:var(--muted);margin-top:6px}
+  .legend i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:5px;vertical-align:-1px}
+  .seg{display:flex;align-items:center;gap:8px;margin:7px 0}
+  .seg .nm{width:140px;font-size:12px}
+  .seg .track{flex:1;height:14px;background:#1d2a45;border-radius:4px;overflow:hidden}
+  .seg .track>i{display:block;height:100%}
+  .seg .n{font-family:var(--mono);font-size:12px;width:34px;text-align:right;color:var(--muted)}
+  .truth{border:1px solid var(--accent);border-radius:14px;padding:18px;
+    background:linear-gradient(180deg,#0f2a24,#0c1b20)}
+  .truth .eyebrow{font-family:var(--mono);font-size:11px;color:var(--accent);letter-spacing:1px}
+  .truth h3{margin:8px 0 12px;font-size:20px;line-height:1.3}
+  .truth ul{margin:0 0 12px;padding-left:18px} .truth li{margin:6px 0}
+  .truth .rec{font-weight:700;color:var(--accent)} .truth .cav{color:var(--muted);font-size:12px;margin-top:8px}
+  .truth .src{font-family:var(--mono);font-size:10px;color:var(--muted);margin-top:8px}
+  .samples{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+  .sc{background:var(--panel2);border:1px solid var(--line);border-radius:12px;padding:12px}
+  .sc .seglab{font-size:11px;font-weight:700} .sc .mv{font-size:12px;color:var(--muted);margin:4px 0 8px}
+  .sc .rsn{font-size:11px;color:var(--muted);display:flex;justify-content:space-between;
+    font-family:var(--mono);padding:2px 0;border-top:1px dashed #22304d}
+  .muted{color:var(--muted)} .thinking{color:var(--accent2);font-family:var(--mono);font-size:12px}
+  details{margin-top:10px} summary{cursor:pointer;color:var(--muted);font-size:12px}
+  .foot{color:var(--muted);font-size:11px;padding:8px 22px 30px;max-width:1400px;margin:0 auto}
+  @media(max-width:1000px){.wrap{grid-template-columns:1fr}.cards{grid-template-columns:repeat(2,1fr)}.samples{grid-template-columns:1fr}.grid2{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<header>
+  <div class="brand">
+    <div class="logo"></div>
+    <div>
+      <h1>ShelfMind <span class="muted">// Synthetic Shopper Swarm</span></h1>
+      <div class="sub">Pre-test a promotion on a thousand synthetic shoppers — and see the human truths behind the result.</div>
+    </div>
+  </div>
+  <div class="badge">HUMAN TRUTH · EAT_HACK</div>
+</header>
+
+<div class="wrap">
+  <!-- CONTROLS -->
+  <aside class="panel">
+    <h2>1 · Category &amp; shelf</h2>
+    <select id="scenario"></select>
+    <div class="shelf" id="shelf"></div>
+
+    <h2 style="margin-top:18px">2 · Promotion</h2>
+    <label class="fld">Promote which product? <span class="muted">(select on the shelf above)</span></label>
+    <div id="targetName" style="font-weight:700;color:var(--accent);font-size:13px">—</div>
+    <label class="fld">Mechanic</label>
+    <select id="promoType"></select>
+    <label class="fld">Discount depth</label>
+    <input type="range" id="depth" min="0" max="50" step="5" value="25"/>
+    <div class="depthrow"><span>0%</span><span id="depthVal">25%</span><span>50%</span></div>
+
+    <h2 style="margin-top:18px">3 · Swarm</h2>
+    <label class="fld">Population: <span id="popVal" class="mono">600</span> shoppers</label>
+    <input type="range" id="pop" min="200" max="1500" step="100" value="600"/>
+    <button class="run" id="runBtn">▶ Run the swarm</button>
+    <button class="ghost" id="reshuffle">⟳ Reshuffle population (new random draw)</button>
+
+    <details>
+      <summary>How the choice maths works</summary>
+      <p class="muted" style="font-size:12px">Each shopper picks the product with the highest utility
+      <i>U = Σ (behavioural weight × product feature)</i> plus Gumbel noise (a logit model). Social-proof-driven
+      shoppers re-weight toward whatever earlier shoppers already picked, so the swarm can tip. Baseline and promo
+      runs share the same noise (common random numbers), so the difference is the promo's causal effect.</p>
+    </details>
+  </aside>
+
+  <!-- MAIN -->
+  <main class="main">
+    <div class="panel stagewrap">
+      <div class="stagehead">
+        <h2 style="margin:0">The swarm chooses</h2>
+        <div class="phaselbl" id="phase">—</div>
+      </div>
+      <canvas id="stage"></canvas>
+      <div class="bins" id="bins"></div>
+      <div class="legend" id="segLegend"></div>
+    </div>
+
+    <div class="cards" id="cards"></div>
+
+    <div class="grid2">
+      <div class="panel chart">
+        <h2>Share of promoted product as the swarm grows <span class="muted">(tipping dynamics)</span></h2>
+        <div id="traj"></div>
+        <div class="legend"><span><i style="background:#8ea0c0"></i>Baseline</span><span><i style="background:#2fe6b0"></i>With promo</span></div>
+      </div>
+      <div class="panel">
+        <h2>Who the promo won <span class="muted">(switchers by segment)</span></h2>
+        <div id="segs"></div>
+      </div>
+    </div>
+
+    <div class="truth" id="truth">
+      <div class="eyebrow">THE HUMAN TRUTH</div>
+      <h3 id="tHead">Run the swarm to reveal the human truth behind the promotion.</h3>
+      <ul id="tBullets"></ul>
+      <div class="rec" id="tRec"></div>
+      <div class="cav" id="tCav"></div>
+      <div class="src" id="tSrc"></div>
+    </div>
+
+    <div class="panel">
+      <h2>Meet the shoppers who switched <span class="muted">(sampled, with their reasoning)</span></h2>
+      <div class="samples" id="samples"></div>
+    </div>
+  </main>
+</div>
+<div class="foot">
+  Built at EAT_HACK for the Human Truth track. Shopper personas are <b>synthetic archetypes</b> informed by known grocery
+  segmentation, not proprietary panel data — directionally useful, not a forecast. To make this real: calibrate segment
+  weights to loyalty-card choice data and validate against historical promo lifts. Use case: Tesco Price &amp; Promotions
+  pre-testing (× Dunnhumby panels).
+</div>
+
+<script>
+const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
+let BOOT=null, SCN=null, TARGET=null, SEGC={}, LAST=null;
+let seed=7;
+
+async function boot(){
+  BOOT=await (await fetch('/api/bootstrap')).json();
+  BOOT.segments.forEach(s=>SEGC[s.name]=s.color);
+  const sel=$('#scenario');
+  BOOT.scenarios.forEach(s=>{const o=document.createElement('option');o.value=s.id;o.textContent=s.name+' — '+s.category;sel.appendChild(o);});
+  const pt=$('#promoType');
+  Object.entries(BOOT.promo_types).forEach(([k,v])=>{if(k==='none')return;const o=document.createElement('option');o.value=k;o.textContent=v;pt.appendChild(o);});
+  // segment legend
+  $('#segLegend').innerHTML=BOOT.segments.map(s=>`<span><i style="background:${s.color}"></i>${s.name}</span>`).join('');
+  sel.onchange=()=>loadScenario(sel.value);
+  loadScenario(BOOT.scenarios[0].id);
+}
+
+function loadScenario(id){
+  SCN=BOOT.scenarios.find(s=>s.id===id);
+  const dp=SCN.default_promo;
+  TARGET=dp.target; $('#promoType').value=dp.type; $('#depth').value=Math.round(dp.depth*100);
+  $('#depthVal').textContent=Math.round(dp.depth*100)+'%';
+  renderShelf();
+  run();
+}
+
+function attrBar(label,val){return `<div class="attr"><span>${label}</span><div class="bar"><i style="width:${Math.round(val*100)}%"></i></div></div>`;}
+
+function renderShelf(){
+  $('#shelf').innerHTML=SCN.products.map(p=>`
+    <label class="prod ${p.id===TARGET?'sel':''}" data-id="${p.id}">
+      <input type="radio" name="tgt" ${p.id===TARGET?'checked':''}/>
+      <div style="flex:1">
+        <div><span class="nm">${p.name}</span>${p.is_incumbent?'<span class="tag">incumbent</span>':'<span class="tag">challenger</span>'}</div>
+        <div class="px">£${p.price.toFixed(2)}</div>
+        <div class="attrs">${attrBar('health',p.health)}${attrBar('novelty',p.novelty)}${attrBar('familiar',p.familiarity)}${attrBar('taste',p.taste)}</div>
+      </div>
+    </label>`).join('');
+  $$('#shelf .prod').forEach(el=>el.onclick=()=>{TARGET=el.dataset.id;renderShelf();updateTargetName();});
+  updateTargetName();
+}
+function updateTargetName(){const p=SCN.products.find(x=>x.id===TARGET);$('#targetName').textContent=p?p.name:'—';}
+
+$('#depth').oninput=e=>$('#depthVal').textContent=e.target.value+'%';
+$('#pop').oninput=e=>$('#popVal').textContent=e.target.value;
+$('#runBtn').onclick=run;
+$('#reshuffle').onclick=()=>{seed=Math.floor(Math.random()*99999);run();};
+
+function req(){return {scenario_id:SCN.id,target:TARGET,promo:{type:$('#promoType').value,depth:(+$('#depth').value)/100},population:+$('#pop').value,seed};}
+
+async function run(){
+  $('#runBtn').textContent='… simulating';
+  const res=await (await fetch('/api/simulate',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(req())})).json();
+  LAST=res; $('#runBtn').textContent='▶ Run the swarm';
+  renderCards(res); renderTraj(res); renderSegs(res); renderSamples(res);
+  setupBins(res); animate(res);
+  narrate();
+}
+
+/* ---------- metric cards ---------- */
+function renderCards(r){
+  const g=r.target_gain, d=r.decomposition;
+  const incPct=g>0?Math.round(100*d.new_to_category/g):0;
+  const cannPct=g>0?Math.round(100*d.cannibalised/g):0;
+  const compPct=g>0?Math.round(100*d.from_competitor/g):0;
+  const sdDelta=(r.say_do.promo_pct-r.say_do.baseline_pct).toFixed(1);
+  $('#cards').innerHTML=`
+    ${card('Extra units sold', '+'+g, 'of '+r.promoted.name, 'ac')}
+    ${card('Truly incremental', incPct+'%', d.new_to_category+' new to category', incPct<25?'bad':'good')}
+    ${card('Cannibalised', cannPct+'%', d.cannibalised+' from own lines', 'warn')}
+    ${card('From competitors', compPct+'%', d.from_competitor+' brand-switchers', 'ac')}
+    ${card('Say-do gap', r.say_do.promo_pct+'%', (sdDelta>=0?'+':'')+sdDelta+' pts vs baseline', 'warn')}`;
+}
+function card(k,v,d,cls){return `<div class="card"><div class="k">${k}</div><div class="v ${cls||''}">${v}</div><div class="d">${d}</div></div>`;}
+
+/* ---------- trajectory chart ---------- */
+function renderTraj(r){
+  const pid=r.promoted.id;
+  const maxX=Math.max(...r.trajectory.map(t=>t.n),1);
+  const minN=Math.max(12,Math.round(maxX*0.05));   // trim the noisy warm-up
+  const base=r.baseline_trajectory.map(t=>({x:t.n,y:t.shares[pid]||0})).filter(p=>p.x>=minN);
+  const promo=r.trajectory.map(t=>({x:t.n,y:t.shares[pid]||0})).filter(p=>p.x>=minN);
+  const W=520,H=210,pad=34;
+  const maxY=Math.min(1,Math.max(0.12,...base.map(p=>p.y),...promo.map(p=>p.y))*1.12);
+  const X=x=>pad+(x/maxX)*(W-pad-10), Y=y=>H-26-(y/maxY)*(H-26-10);
+  const line=(pts,col,w)=>`<polyline fill="none" stroke="${col}" stroke-width="${w}" points="${pts.map(p=>X(p.x)+','+Y(p.y)).join(' ')}"/>`;
+  let grid='';
+  for(let i=0;i<=4;i++){const y=H-26-(i/4)*(H-26-10);const v=Math.round((maxY*i/4)*100);
+    grid+=`<line x1="${pad}" y1="${y}" x2="${W-10}" y2="${y}" stroke="#1d2a45"/><text x="4" y="${y+3}" fill="#6b7a99" font-size="9" font-family="monospace">${v}%</text>`;}
+  $('#traj').innerHTML=`<div class="chart"><svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none">
+    ${grid}${line(base,'#8ea0c0',2)}${line(promo,'#2fe6b0',2.6)}
+    <text x="${pad}" y="${H-8}" fill="#6b7a99" font-size="9" font-family="monospace">shoppers →</text></svg></div>`;
+}
+
+/* ---------- segment bars ---------- */
+function renderSegs(r){
+  const ents=Object.entries(r.segment_gain).sort((a,b)=>b[1]-a[1]);
+  const max=Math.max(1,...ents.map(e=>e[1]));
+  $('#segs').innerHTML=ents.map(([n,v])=>`<div class="seg"><div class="nm">${n}</div>
+    <div class="track"><i style="width:${Math.round(100*v/max)}%;background:${SEGC[n]||'#2fe6b0'}"></i></div>
+    <div class="n">+${v}</div></div>`).join('')||'<div class="muted">No net switchers.</div>';
+}
+
+/* ---------- sample shoppers ---------- */
+const FAC={value:'value for money',deal:'the deal / saving',social_proof:'social proof',habit:'brand habit',loyalty_deal:'loyalty price',health:'health',novelty:'novelty',taste:'taste',convenience:'convenience'};
+function renderSamples(r){
+  $('#samples').innerHTML=(r.samples||[]).map(s=>`<div class="sc">
+    <div class="seglab" style="color:${s.color}">${s.segment}</div>
+    <div class="mv">says they care about <b>${s.stated_priority}</b> · switched from <b>${s.came_from}</b> → <b>${s.chose}</b></div>
+    ${s.top_reasons.map(t=>`<div class="rsn"><span>${FAC[t.factor]||t.factor}</span><span>${t.weight}</span></div>`).join('')}
+  </div>`).join('')||'<div class="muted">No switchers to sample.</div>';
+}
+
+/* ---------- swarm animation ---------- */
+let dots=[], raf=null, bins=[];
+function binsOrder(){return SCN.products.map(p=>({id:p.id,name:p.name,promoted:p.id===TARGET})).concat([{id:'__nobuy__',name:'Walked away',nobuy:true}]);}
+function setupBins(r){
+  bins=binsOrder();
+  $('#bins').innerHTML=bins.map(b=>`<div class="bin ${b.promoted?'promoted':''} ${b.nobuy?'nobuy':''}"><b>${b.name}</b><span class="ct" data-id="${b.id}">—</span></div>`).join('');
+}
+function cnt(choices){const m={};choices.forEach(c=>m[c]=(m[c]||0)+1);return m;}
+function layout(choices){
+  const cv=$('#stage'), W=cv.clientWidth, H=cv.clientHeight;
+  const nb=bins.length, bw=W/nb, sp=10, rows=Math.max(1,Math.floor((H-24)/sp));
+  const per={}; const pos=[];
+  bins.forEach(b=>per[b.id]=0);
+  choices.forEach((c)=>{
+    const bi=Math.max(0,bins.findIndex(b=>b.id===c));
+    const k=per[c]=(per[c]||0)+1; const idx=k-1;
+    const col=Math.floor(idx/rows), row=idx%rows;
+    const x=bi*bw+6+col*sp+ (sp/2);
+    const y=H-12-row*sp;
+    pos.push({x:Math.min(x,bi*bw+bw-4),y});
+  });
+  return pos;
+}
+function dpr(cv){const r=cv.getBoundingClientRect();cv.width=r.width*devicePixelRatio;cv.height=r.height*devicePixelRatio;const c=cv.getContext('2d');c.setTransform(devicePixelRatio,0,0,devicePixelRatio,1,1);return c;}
+function setCounts(choices){const m=cnt(choices);$$('#bins .ct').forEach(el=>el.textContent=m[el.dataset.id]||0);}
+function animate(r){
+  const cv=$('#stage'); const ctx=dpr(cv);
+  const colors=r.viz.colors;
+  const basePos=layout(r.viz.base), promoPos=layout(r.viz.promo);
+  if(dots.length!==colors.length){
+    dots=colors.map((col,i)=>({x:Math.random()*cv.clientWidth,y:Math.random()*cv.clientHeight,tx:basePos[i].x,ty:basePos[i].y,c:col}));
+  }else{dots.forEach((d,i)=>{d.tx=basePos[i].x;d.ty=basePos[i].y;});}
+  $('#phase').textContent='Baseline (no promo)'; setCounts(r.viz.base);
+  let phase=0;
+  clearTimeout(animate._t1);
+  animate._t1=setTimeout(()=>{dots.forEach((d,i)=>{d.tx=promoPos[i].x;d.ty=promoPos[i].y;});$('#phase').textContent='With promo → '+r.promoted.name;setCounts(r.viz.promo);},1500);
+  cancelAnimationFrame(raf);
+  function frame(){
+    ctx.clearRect(0,0,cv.clientWidth,cv.clientHeight);
+    const nb=bins.length,bw=cv.clientWidth/nb;
+    // highlight the promoted bin
+    const pb=bins.findIndex(b=>b.promoted);
+    if(pb>=0){ctx.fillStyle='rgba(47,230,176,0.07)';ctx.fillRect(pb*bw,0,bw,cv.clientHeight);}
+    // bin separators
+    ctx.strokeStyle='#162138';for(let i=1;i<nb;i++){ctx.beginPath();ctx.moveTo(i*bw,0);ctx.lineTo(i*bw,cv.clientHeight);ctx.stroke();}
+    let moving=0;
+    dots.forEach(d=>{d.x+=(d.tx-d.x)*0.14;d.y+=(d.ty-d.y)*0.14;if(Math.abs(d.tx-d.x)>0.6||Math.abs(d.ty-d.y)>0.6)moving++;
+      ctx.beginPath();ctx.fillStyle=d.c;ctx.globalAlpha=.9;ctx.arc(d.x,d.y,3.1,0,6.283);ctx.fill();});
+    ctx.globalAlpha=1;
+    raf=requestAnimationFrame(frame);
+  }
+  frame();
+}
+window.addEventListener('resize',()=>{if(LAST){setupBins(LAST);dots=[];animate(LAST);}});
+
+/* ---------- narrative ---------- */
+async function narrate(){
+  $('#tHead').textContent='Reading the swarm…'; $('#tBullets').innerHTML=''; $('#tRec').textContent=''; $('#tCav').textContent='';
+  $('#tSrc').innerHTML='<span class="thinking">● analysing behavioural signals…</span>';
+  try{
+    const n=await (await fetch('/api/narrate',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(req())})).json();
+    $('#tHead').textContent=n.headline||'';
+    $('#tBullets').innerHTML=(n.bullets||[]).map(b=>`<li>${b}</li>`).join('');
+    $('#tRec').textContent=n.recommendation||'';
+    $('#tCav').textContent=n.caveat||'';
+    $('#tSrc').textContent='narration: '+(n.source||'');
+  }catch(e){$('#tHead').textContent='Narration unavailable (model offline) — the numbers above still stand.';$('#tSrc').textContent='';}
+}
+
+boot();
+</script>
+</body>
+</html>
