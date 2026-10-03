@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>ShelfMind — Synthetic Shopper Swarm</title>
+<title>ShelfMind - Synthetic Shopper Swarm</title>
 <style>
   :root{
     --bg:#0b1020; --panel:#121a2e; --panel2:#0f1627; --line:#22304d;
@@ -14,7 +14,6 @@
   *{box-sizing:border-box}
   body{margin:0;background:radial-gradient(1200px 600px at 70% -10%,#16213c 0,var(--bg) 60%);
     color:var(--ink);font-family:var(--sans);font-size:14px;line-height:1.45}
-  a{color:var(--accent)}
   header{display:flex;align-items:center;justify-content:space-between;gap:16px;
     padding:14px 22px;border-bottom:1px solid var(--line);position:sticky;top:0;
     background:rgba(11,16,32,.82);backdrop-filter:blur(8px);z-index:5}
@@ -25,79 +24,70 @@
   .brand .sub{color:var(--muted);font-size:12px;margin-top:1px}
   .badge{font-family:var(--mono);font-size:11px;color:#0b1020;background:var(--accent);
     padding:4px 9px;border-radius:999px;font-weight:700;letter-spacing:.4px}
-  .wrap{display:grid;grid-template-columns:340px 1fr;gap:18px;padding:18px 22px;max-width:1400px;margin:0 auto}
+  .wrap{display:grid;grid-template-columns:340px 1fr;gap:18px;padding:18px 22px;max-width:1420px;margin:0 auto}
   .panel{background:linear-gradient(180deg,var(--panel),var(--panel2));border:1px solid var(--line);
     border-radius:14px;padding:16px}
-  .panel h2{font-size:12px;text-transform:uppercase;letter-spacing:1px;color:var(--muted);
-    margin:0 0 12px;font-weight:600}
-  label.fld{display:block;font-size:12px;color:var(--muted);margin:12px 0 5px}
+  .panel h2{font-size:12px;text-transform:uppercase;letter-spacing:1px;color:var(--muted);margin:0 0 12px;font-weight:600}
+  label.fld{display:block;font-size:12px;color:var(--muted);margin:14px 0 5px}
   select,input[type=range]{width:100%}
-  select{background:var(--panel2);color:var(--ink);border:1px solid var(--line);border-radius:8px;
-    padding:9px 10px;font-family:var(--sans);font-size:13px}
-  .shelf{display:flex;flex-direction:column;gap:8px;margin-top:4px}
-  .prod{display:flex;gap:10px;align-items:center;padding:9px;border:1px solid var(--line);
-    border-radius:10px;cursor:pointer;transition:.12s;background:var(--panel2)}
-  .prod:hover{border-color:#36507e}
-  .prod.sel{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent) inset}
-  .prod input{accent-color:var(--accent);margin-top:2px}
-  .prod .nm{font-weight:600;font-size:13px}
-  .prod .px{font-family:var(--mono);color:var(--accent2);font-size:12px}
-  .prod .tag{font-size:10px;color:var(--muted);border:1px solid var(--line);border-radius:5px;
-    padding:1px 5px;margin-left:6px}
-  .attrs{display:flex;gap:7px;margin-top:5px}
-  .attr{flex:1}
-  .attr span{font-size:9px;color:var(--muted);display:block;margin-bottom:2px}
-  .bar{height:4px;border-radius:3px;background:#1d2a45;overflow:hidden}
-  .bar>i{display:block;height:100%;background:var(--accent)}
+  select{background:var(--panel2);color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:10px;font-family:var(--sans);font-size:13px}
+  .cat{font-size:11px;color:var(--muted);margin-top:4px}
   .depthrow{display:flex;justify-content:space-between;font-family:var(--mono);font-size:12px;color:var(--muted)}
+  #pricePreview{margin-top:10px;font-family:var(--mono);font-size:12px;color:var(--ink);background:var(--panel2);border:1px solid var(--line);border-radius:8px;padding:9px 10px}
   button.run{margin-top:16px;width:100%;padding:12px;border:none;border-radius:10px;cursor:pointer;
-    background:linear-gradient(90deg,var(--accent),#1fc79a);color:#06231b;font-weight:800;font-size:14px;
-    letter-spacing:.3px;box-shadow:0 6px 18px #2fe6b033}
+    background:linear-gradient(90deg,var(--accent),#1fc79a);color:#06231b;font-weight:800;font-size:14px;box-shadow:0 6px 18px #2fe6b033}
   button.run:active{transform:translateY(1px)}
-  button.ghost{background:transparent;color:var(--muted);border:1px solid var(--line);border-radius:8px;
-    padding:7px 10px;cursor:pointer;font-size:12px;margin-top:8px;width:100%}
+  button.ghost{background:transparent;color:var(--muted);border:1px solid var(--line);border-radius:8px;padding:7px 10px;cursor:pointer;font-size:12px;margin-top:8px;width:100%}
+  .lever{border:1px solid var(--accent);border-radius:10px;padding:10px;margin-top:4px;background:#0f2a2410}
+  .leverlab{font-family:var(--mono);font-size:10px;color:var(--accent);letter-spacing:.5px}
   .main{display:flex;flex-direction:column;gap:18px;min-width:0}
-  .stagewrap{position:relative}
   .stagehead{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:8px}
   .phaselbl{font-family:var(--mono);font-size:12px;color:var(--accent2)}
-  #stage{width:100%;height:300px;display:block;background:
-    linear-gradient(180deg,#0c1324 0,#0b1020 100%);border-radius:10px}
+  #stage{width:100%;height:300px;display:block;background:linear-gradient(180deg,#0c1324 0,#0b1020 100%);border-radius:10px}
   .bins{display:flex;margin-top:6px}
   .bin{flex:1;text-align:center;font-size:11px;color:var(--muted);padding:0 2px}
   .bin b{display:block;color:var(--ink);font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .bin .ct{font-family:var(--mono);font-size:12px}
-  .bin.promoted b{color:var(--accent)}
-  .bin.nobuy b{color:var(--muted)}
+  .bin.promoted b{color:var(--accent)} .bin.nobuy b{color:var(--muted)}
   .cards{display:grid;grid-template-columns:repeat(5,1fr);gap:12px}
   .card{background:var(--panel2);border:1px solid var(--line);border-radius:12px;padding:12px}
   .card .k{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px}
   .card .v{font-family:var(--mono);font-size:24px;font-weight:700;margin-top:6px}
   .card .d{font-size:11px;color:var(--muted);margin-top:3px}
-  .v.good{color:var(--good)} .v.warn{color:var(--accent2)} .v.bad{color:var(--danger)} .v.ac{color:var(--accent)}
+  .v.good{color:var(--good)} .v.warn{color:var(--accent2)} .v.ac{color:var(--accent)}
   .grid2{display:grid;grid-template-columns:1fr 1fr;gap:18px}
-  .chart svg{width:100%;height:210px}
-  .legend{display:flex;gap:14px;flex-wrap:wrap;font-size:11px;color:var(--muted);margin-top:6px}
-  .legend i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:5px;vertical-align:-1px}
-  .seg{display:flex;align-items:center;gap:8px;margin:7px 0}
-  .seg .nm{width:140px;font-size:12px}
-  .seg .track{flex:1;height:14px;background:#1d2a45;border-radius:4px;overflow:hidden}
+  .srcbar{display:flex;height:26px;border-radius:7px;overflow:hidden;margin:6px 0 10px;border:1px solid var(--line)}
+  .srcbar>span{display:flex;align-items:center;justify-content:center;font-size:10px;font-family:var(--mono);color:#06231b;font-weight:700}
+  .srclegend{display:flex;gap:16px;flex-wrap:wrap;font-size:12px;color:var(--muted)}
+  .srclegend i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:5px;vertical-align:-1px}
+  table{width:100%;border-collapse:collapse;font-size:12px}
+  th,td{text-align:right;padding:7px 8px;border-bottom:1px solid var(--line)}
+  th:first-child,td:first-child{text-align:left}
+  th{color:var(--muted);font-weight:600;font-size:11px;text-transform:uppercase;letter-spacing:.4px}
+  td.pm{font-family:var(--mono)} tr.tesco{background:#0f2a2430} tr.tesco td:first-child{color:var(--accent);font-weight:700}
+  .ns{color:var(--muted);font-style:italic}
+  .promoprice{color:var(--accent);font-weight:700}
+  .seg,.ba{display:flex;align-items:center;gap:8px;margin:7px 0}
+  .seg .nm,.ba .nm{width:130px;font-size:12px}
+  .seg .track,.ba .track{flex:1;height:14px;background:#1d2a45;border-radius:4px;overflow:hidden;position:relative}
   .seg .track>i{display:block;height:100%}
-  .seg .n{font-family:var(--mono);font-size:12px;width:34px;text-align:right;color:var(--muted)}
-  .truth{border:1px solid var(--accent);border-radius:14px;padding:18px;
-    background:linear-gradient(180deg,#0f2a24,#0c1b20)}
+  .ba .track>i.b{height:6px;background:#8ea0c0}.ba .track>i.p{height:6px}
+  .seg .n{font-family:var(--mono);font-size:12px;width:36px;text-align:right;color:var(--muted)}
+  .ba .n{font-family:var(--mono);font-size:11px;width:84px;text-align:right;color:var(--muted)}
+  .legend{display:flex;gap:14px;flex-wrap:wrap;font-size:11px;color:var(--muted);margin-top:8px}
+  .legend i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:5px;vertical-align:-1px}
+  .truth{border:1px solid var(--accent);border-radius:14px;padding:18px;background:linear-gradient(180deg,#0f2a24,#0c1b20)}
   .truth .eyebrow{font-family:var(--mono);font-size:11px;color:var(--accent);letter-spacing:1px}
-  .truth h3{margin:8px 0 12px;font-size:20px;line-height:1.3}
+  .truth h3{margin:8px 0 12px;font-size:19px;line-height:1.3}
   .truth ul{margin:0 0 12px;padding-left:18px} .truth li{margin:6px 0}
   .truth .rec{font-weight:700;color:var(--accent)} .truth .cav{color:var(--muted);font-size:12px;margin-top:8px}
   .truth .src{font-family:var(--mono);font-size:10px;color:var(--muted);margin-top:8px}
   .samples{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
   .sc{background:var(--panel2);border:1px solid var(--line);border-radius:12px;padding:12px}
-  .sc .seglab{font-size:11px;font-weight:700} .sc .mv{font-size:12px;color:var(--muted);margin:4px 0 8px}
-  .sc .rsn{font-size:11px;color:var(--muted);display:flex;justify-content:space-between;
-    font-family:var(--mono);padding:2px 0;border-top:1px dashed #22304d}
+  .sc .seglab{font-size:11px;font-weight:700}.sc .mv{font-size:12px;color:var(--muted);margin:4px 0 8px}
+  .sc .rsn{font-size:11px;color:var(--muted);display:flex;justify-content:space-between;font-family:var(--mono);padding:2px 0;border-top:1px dashed #22304d}
   .muted{color:var(--muted)} .thinking{color:var(--accent2);font-family:var(--mono);font-size:12px}
-  details{margin-top:10px} summary{cursor:pointer;color:var(--muted);font-size:12px}
-  .foot{color:var(--muted);font-size:11px;padding:8px 22px 30px;max-width:1400px;margin:0 auto}
+  details{margin-top:12px} summary{cursor:pointer;color:var(--muted);font-size:12px}
   @media(max-width:1000px){.wrap{grid-template-columns:1fr}.cards{grid-template-columns:repeat(2,1fr)}.samples{grid-template-columns:1fr}.grid2{grid-template-columns:1fr}}
 </style>
 </head>
@@ -107,72 +97,85 @@
     <div class="logo"></div>
     <div>
       <h1>ShelfMind <span class="muted">// Synthetic Shopper Swarm</span></h1>
-      <div class="sub">Pre-test a promotion on a thousand synthetic shoppers — and see the human truths behind the result.</div>
+      <div class="sub">Pre-test a Tesco promo against the big-6, and see where the volume really comes from.</div>
     </div>
   </div>
   <div class="badge">HUMAN TRUTH · EAT_HACK</div>
 </header>
 
 <div class="wrap">
-  <!-- CONTROLS -->
   <aside class="panel">
-    <h2>1 · Category &amp; shelf</h2>
-    <select id="scenario"></select>
-    <div class="shelf" id="shelf"></div>
+    <h2>1 · Product</h2>
+    <select id="product"></select>
+    <div class="cat" id="cat"></div>
 
-    <h2 style="margin-top:18px">2 · Promotion</h2>
-    <label class="fld">Promote which product? <span class="muted">(select on the shelf above)</span></label>
-    <div id="targetName" style="font-weight:700;color:var(--accent);font-size:13px">—</div>
-    <label class="fld">Mechanic</label>
-    <select id="promoType"></select>
-    <label class="fld">Discount depth</label>
-    <input type="range" id="depth" min="0" max="50" step="5" value="25"/>
-    <div class="depthrow"><span>0%</span><span id="depthVal">25%</span><span>50%</span></div>
+    <h2 style="margin-top:20px">2 · Your lever: Tesco Clubcard promo</h2>
+    <div class="lever">
+      <div class="leverlab">MECHANIC (all Tesco offers are Clubcard prices)</div>
+      <select id="promoType" style="margin-top:6px"></select>
+      <label class="fld">Discount depth</label>
+      <input type="range" id="depth" min="0" max="50" step="5" value="25"/>
+      <div class="depthrow"><span>0%</span><span id="depthVal">25%</span><span>50%</span></div>
+      <div id="pricePreview"></div>
+    </div>
 
-    <h2 style="margin-top:18px">3 · Swarm</h2>
-    <label class="fld">Population: <span id="popVal" class="mono">600</span> shoppers</label>
-    <input type="range" id="pop" min="200" max="1500" step="100" value="600"/>
+    <h2 style="margin-top:20px">3 · Swarm</h2>
+    <label class="fld">Population: <span id="popVal" class="mono">1000</span> shoppers</label>
+    <input type="range" id="pop" min="200" max="1500" step="100" value="1000"/>
     <button class="run" id="runBtn">▶ Run the swarm</button>
-    <button class="ghost" id="reshuffle">⟳ Reshuffle population (new random draw)</button>
+    <button class="ghost" id="reshuffle">⟳ Reshuffle population</button>
 
     <details>
-      <summary>How the choice maths works</summary>
-      <p class="muted" style="font-size:12px">Each shopper picks the product with the highest utility
-      <i>U = Σ (behavioural weight × product feature)</i> plus Gumbel noise (a logit model). Social-proof-driven
-      shoppers re-weight toward whatever earlier shoppers already picked, so the swarm can tip. Baseline and promo
-      runs share the same noise (common random numbers), so the difference is the promo's causal effect.</p>
+      <summary>How "the swarm chooses" works</summary>
+      <p class="muted" style="font-size:12px">Each shopper picks where to buy this product (Tesco, a competitor
+      that stocks it, or a Tesco substitute) or walks away, by maximising utility <i>U = price + deal + store
+      loyalty + product appeal + social proof</i> plus noise (a logit model). We run it twice with the same
+      shoppers and noise - Tesco at base price, then with your promo - so the difference is the promo's causal
+      effect, and we can trace each switcher's origin.</p>
     </details>
+    <div class="legend" id="segLegend"></div>
   </aside>
 
-  <!-- MAIN -->
   <main class="main">
-    <div class="panel stagewrap">
+    <div class="panel">
       <div class="stagehead">
-        <h2 style="margin:0">The swarm chooses</h2>
-        <div class="phaselbl" id="phase">—</div>
+        <h2 style="margin:0">Where the swarm buys <span class="muted">(dots = shoppers, coloured by segment)</span></h2>
+        <div class="phaselbl" id="phase">-</div>
       </div>
       <canvas id="stage"></canvas>
       <div class="bins" id="bins"></div>
-      <div class="legend" id="segLegend"></div>
     </div>
 
     <div class="cards" id="cards"></div>
 
     <div class="grid2">
-      <div class="panel chart">
-        <h2>Share of promoted product as the swarm grows <span class="muted">(tipping dynamics)</span></h2>
-        <div id="traj"></div>
-        <div class="legend"><span><i style="background:#8ea0c0"></i>Baseline</span><span><i style="background:#2fe6b0"></i>With promo</span></div>
+      <div class="panel">
+        <h2>Where the +<span id="gainLbl">0</span> uplift came from</h2>
+        <div class="srcbar" id="srcbar"></div>
+        <div class="srclegend" id="srclegend"></div>
+        <p class="muted" style="font-size:12px;margin:12px 0 0">Only <b id="netPct">0%</b> is truly incremental to Tesco
+        (won from competitors + new demand). The rest is cannibalised from Tesco's own lines.</p>
       </div>
       <div class="panel">
-        <h2>Who the promo won <span class="muted">(switchers by segment)</span></h2>
+        <h2>Who the promo won <span class="muted">(switchers to Tesco, by segment)</span></h2>
         <div id="segs"></div>
       </div>
     </div>
 
+    <div class="grid2">
+      <div class="panel">
+        <h2>Competitor prices <span class="muted">(current, from db)</span></h2>
+        <table id="priceTable"><thead><tr><th>Retailer</th><th>Base</th><th>Promo now</th></tr></thead><tbody></tbody></table>
+      </div>
+      <div class="panel">
+        <h2>Before → after, by retailer <span class="muted">(units)</span></h2>
+        <div id="beforeAfter"></div>
+      </div>
+    </div>
+
     <div class="truth" id="truth">
-      <div class="eyebrow">THE HUMAN TRUTH</div>
-      <h3 id="tHead">Run the swarm to reveal the human truth behind the promotion.</h3>
+      <div class="eyebrow">AI EXPLANATION</div>
+      <h3 id="tHead">Run the swarm to generate the AI explanation.</h3>
       <ul id="tBullets"></ul>
       <div class="rec" id="tRec"></div>
       <div class="cav" id="tCav"></div>
@@ -180,201 +183,160 @@
     </div>
 
     <div class="panel">
-      <h2>Meet the shoppers who switched <span class="muted">(sampled, with their reasoning)</span></h2>
+      <h2>Meet the shoppers who switched to Tesco <span class="muted">(sampled, with reasoning)</span></h2>
       <div class="samples" id="samples"></div>
     </div>
   </main>
 </div>
-<div class="foot">
-  Built at EAT_HACK for the Human Truth track. Shopper personas are <b>synthetic archetypes</b> informed by known grocery
-  segmentation, not proprietary panel data — directionally useful, not a forecast. To make this real: calibrate segment
-  weights to loyalty-card choice data and validate against historical promo lifts. Use case: Tesco Price &amp; Promotions
-  pre-testing (× Dunnhumby panels).
-</div>
 
 <script>
 const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
-let BOOT=null, SCN=null, TARGET=null, SEGC={}, LAST=null;
-let seed=7;
+let BOOT=null, PROD=null, SEGC={}, RETC={}, LAST=null, seed=7;
 
 async function boot(){
   BOOT=await (await fetch('/api/bootstrap')).json();
   BOOT.segments.forEach(s=>SEGC[s.name]=s.color);
-  const sel=$('#scenario');
-  BOOT.scenarios.forEach(s=>{const o=document.createElement('option');o.value=s.id;o.textContent=s.name+' — '+s.category;sel.appendChild(o);});
+  BOOT.retailers.forEach(r=>RETC[r.id]=r);
+  const ps=$('#product');
+  BOOT.products.forEach(p=>{const o=document.createElement('option');o.value=p.id;o.textContent=p.name;ps.appendChild(o);});
   const pt=$('#promoType');
-  Object.entries(BOOT.promo_types).forEach(([k,v])=>{if(k==='none')return;const o=document.createElement('option');o.value=k;o.textContent=v;pt.appendChild(o);});
-  // segment legend
+  Object.entries(BOOT.promo_types).forEach(([k,v])=>{const o=document.createElement('option');o.value=k;o.textContent=v;pt.appendChild(o);});
   $('#segLegend').innerHTML=BOOT.segments.map(s=>`<span><i style="background:${s.color}"></i>${s.name}</span>`).join('');
-  sel.onchange=()=>loadScenario(sel.value);
-  loadScenario(BOOT.scenarios[0].id);
+  ps.onchange=()=>loadProduct(ps.value);
+  loadProduct(BOOT.products[0].id);
 }
-
-function loadScenario(id){
-  SCN=BOOT.scenarios.find(s=>s.id===id);
-  const dp=SCN.default_promo;
-  TARGET=dp.target; $('#promoType').value=dp.type; $('#depth').value=Math.round(dp.depth*100);
-  $('#depthVal').textContent=Math.round(dp.depth*100)+'%';
-  renderShelf();
-  run();
+function loadProduct(id){
+  PROD=BOOT.products.find(p=>p.id===id);
+  $('#cat').textContent=PROD.category+' · Tesco base £'+PROD.tesco_base.toFixed(2);
+  updatePreview(); run();
 }
-
-function attrBar(label,val){return `<div class="attr"><span>${label}</span><div class="bar"><i style="width:${Math.round(val*100)}%"></i></div></div>`;}
-
-function renderShelf(){
-  $('#shelf').innerHTML=SCN.products.map(p=>`
-    <label class="prod ${p.id===TARGET?'sel':''}" data-id="${p.id}">
-      <input type="radio" name="tgt" ${p.id===TARGET?'checked':''}/>
-      <div style="flex:1">
-        <div><span class="nm">${p.name}</span>${p.is_incumbent?'<span class="tag">incumbent</span>':'<span class="tag">challenger</span>'}</div>
-        <div class="px">£${p.price.toFixed(2)}</div>
-        <div class="attrs">${attrBar('health',p.health)}${attrBar('novelty',p.novelty)}${attrBar('familiar',p.familiarity)}${attrBar('taste',p.taste)}</div>
-      </div>
-    </label>`).join('');
-  $$('#shelf .prod').forEach(el=>el.onclick=()=>{TARGET=el.dataset.id;renderShelf();updateTargetName();});
-  updateTargetName();
-}
-function updateTargetName(){const p=SCN.products.find(x=>x.id===TARGET);$('#targetName').textContent=p?p.name:'—';}
-
-$('#depth').oninput=e=>$('#depthVal').textContent=e.target.value+'%';
+$('#depth').oninput=e=>{$('#depthVal').textContent=e.target.value+'%';updatePreview();};
+$('#promoType').onchange=updatePreview;
 $('#pop').oninput=e=>$('#popVal').textContent=e.target.value;
 $('#runBtn').onclick=run;
 $('#reshuffle').onclick=()=>{seed=Math.floor(Math.random()*99999);run();};
-
-function req(){return {scenario_id:SCN.id,target:TARGET,promo:{type:$('#promoType').value,depth:(+$('#depth').value)/100},population:+$('#pop').value,seed};}
+function updatePreview(){if(!PROD)return;const t=$('#promoType').value,d=(+$('#depth').value)/100,b=PROD.tesco_base,e=b*(1-d);
+  $('#pricePreview').innerHTML = t==='multibuy'
+    ? `Base £${b.toFixed(2)} → Best price £${e.toFixed(2)}/unit · 2 for £${(e*2).toFixed(2)}`
+    : `Base £${b.toFixed(2)} → Shelf price £${e.toFixed(2)} · ${Math.round(d*100)}% off`;}
+function req(){return {product_id:PROD.id,promo:{type:$('#promoType').value,depth:(+$('#depth').value)/100},population:+$('#pop').value,seed};}
 
 async function run(){
   $('#runBtn').textContent='… simulating';
-  const res=await (await fetch('/api/simulate',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(req())})).json();
-  LAST=res; $('#runBtn').textContent='▶ Run the swarm';
-  renderCards(res); renderTraj(res); renderSegs(res); renderSamples(res);
-  setupBins(res); animate(res);
-  narrate();
+  const r=await (await fetch('/api/simulate',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(req())})).json();
+  LAST=r; $('#runBtn').textContent='▶ Run the swarm';
+  renderCards(r); renderSources(r); renderSegs(r); renderPriceTable(r); renderBeforeAfter(r); renderSamples(r);
+  setupBins(r); animate(r); narrate();
 }
 
-/* ---------- metric cards ---------- */
-function renderCards(r){
-  const g=r.target_gain, d=r.decomposition;
-  const incPct=g>0?Math.round(100*d.new_to_category/g):0;
-  const cannPct=g>0?Math.round(100*d.cannibalised/g):0;
-  const compPct=g>0?Math.round(100*d.from_competitor/g):0;
-  const sdDelta=(r.say_do.promo_pct-r.say_do.baseline_pct).toFixed(1);
-  $('#cards').innerHTML=`
-    ${card('Extra units sold', '+'+g, 'of '+r.promoted.name, 'ac')}
-    ${card('Truly incremental', incPct+'%', d.new_to_category+' new to category', incPct<25?'bad':'good')}
-    ${card('Cannibalised', cannPct+'%', d.cannibalised+' from own lines', 'warn')}
-    ${card('From competitors', compPct+'%', d.from_competitor+' brand-switchers', 'ac')}
-    ${card('Say-do gap', r.say_do.promo_pct+'%', (sdDelta>=0?'+':'')+sdDelta+' pts vs baseline', 'warn')}`;
-}
 function card(k,v,d,cls){return `<div class="card"><div class="k">${k}</div><div class="v ${cls||''}">${v}</div><div class="d">${d}</div></div>`;}
-
-/* ---------- trajectory chart ---------- */
-function renderTraj(r){
-  const pid=r.promoted.id;
-  const maxX=Math.max(...r.trajectory.map(t=>t.n),1);
-  const minN=Math.max(12,Math.round(maxX*0.05));   // trim the noisy warm-up
-  const base=r.baseline_trajectory.map(t=>({x:t.n,y:t.shares[pid]||0})).filter(p=>p.x>=minN);
-  const promo=r.trajectory.map(t=>({x:t.n,y:t.shares[pid]||0})).filter(p=>p.x>=minN);
-  const W=520,H=210,pad=34;
-  const maxY=Math.min(1,Math.max(0.12,...base.map(p=>p.y),...promo.map(p=>p.y))*1.12);
-  const X=x=>pad+(x/maxX)*(W-pad-10), Y=y=>H-26-(y/maxY)*(H-26-10);
-  const line=(pts,col,w)=>`<polyline fill="none" stroke="${col}" stroke-width="${w}" points="${pts.map(p=>X(p.x)+','+Y(p.y)).join(' ')}"/>`;
-  let grid='';
-  for(let i=0;i<=4;i++){const y=H-26-(i/4)*(H-26-10);const v=Math.round((maxY*i/4)*100);
-    grid+=`<line x1="${pad}" y1="${y}" x2="${W-10}" y2="${y}" stroke="#1d2a45"/><text x="4" y="${y+3}" fill="#6b7a99" font-size="9" font-family="monospace">${v}%</text>`;}
-  $('#traj').innerHTML=`<div class="chart"><svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none">
-    ${grid}${line(base,'#8ea0c0',2)}${line(promo,'#2fe6b0',2.6)}
-    <text x="${pad}" y="${H-8}" fill="#6b7a99" font-size="9" font-family="monospace">shoppers →</text></svg></div>`;
+function renderCards(r){
+  const d=r.decomposition, g=Math.max(r.tesco_units.gain,1), gross=Math.max(d.gross_inflow,1);
+  const pc=x=>Math.round(100*x/gross);
+  $('#cards').innerHTML=
+    card('Extra Tesco units','+'+r.tesco_units.gain, r.tesco_units.baseline+' → '+r.tesco_units.promo,'ac')+
+    card('Net incremental','+'+d.net_incremental, pc(d.net_incremental)+'% of uplift', d.net_incremental/gross>=0.5?'good':'warn')+
+    card('Cannibalised', d.cannibalised, pc(d.cannibalised)+'% from own lines','warn')+
+    card('From competitors', d.from_competitor_total, pc(d.from_competitor_total)+'% won from rivals','ac')+
+    card('New demand', d.new_uplift, pc(d.new_uplift)+'% new category buyers','good');
 }
-
-/* ---------- segment bars ---------- */
+function renderSources(r){
+  const d=r.decomposition, gross=Math.max(d.gross_inflow,1);
+  $('#gainLbl').textContent=r.tesco_units.gain;
+  const parts=[['Cannibalised (own lines)',d.cannibalised,'var(--accent2)'],
+               ['Won from competitors',d.from_competitor_total,'var(--accent)'],
+               ['New demand',d.new_uplift,'var(--good)']];
+  $('#srcbar').innerHTML=parts.map(p=>{const w=100*p[1]/gross;return w>0?`<span style="width:${w}%;background:${p[2]}">${w>8?p[1]:''}</span>`:'';}).join('');
+  $('#srclegend').innerHTML=parts.map(p=>`<span><i style="background:${p[2]}"></i>${p[0]}: <b>${p[1]}</b></span>`).join('');
+  $('#netPct').textContent=Math.round(100*d.net_incremental/gross)+'%';
+}
 function renderSegs(r){
-  const ents=Object.entries(r.segment_gain).sort((a,b)=>b[1]-a[1]);
-  const max=Math.max(1,...ents.map(e=>e[1]));
-  $('#segs').innerHTML=ents.map(([n,v])=>`<div class="seg"><div class="nm">${n}</div>
+  const e=Object.entries(r.segment_gain).sort((a,b)=>b[1]-a[1]), max=Math.max(1,...e.map(x=>x[1]));
+  $('#segs').innerHTML=e.map(([n,v])=>`<div class="seg"><div class="nm">${n}</div>
     <div class="track"><i style="width:${Math.round(100*v/max)}%;background:${SEGC[n]||'#2fe6b0'}"></i></div>
-    <div class="n">+${v}</div></div>`).join('')||'<div class="muted">No net switchers.</div>';
+    <div class="n">+${v}</div></div>`).join('')||'<div class="muted">No switchers.</div>';
 }
-
-/* ---------- sample shoppers ---------- */
-const FAC={value:'value for money',deal:'the deal / saving',social_proof:'social proof',habit:'brand habit',loyalty_deal:'loyalty price',health:'health',novelty:'novelty',taste:'taste',convenience:'convenience'};
+function renderPriceTable(r){
+  $('#priceTable tbody').innerHTML=r.price_table.map(t=>{
+    if(!t.stocked) return `<tr><td>${t.retailer}</td><td colspan="2" class="ns">not stocked</td></tr>`;
+    const promo = t.promo!=null ? `<span class="promoprice">£${t.promo.toFixed(2)}</span>` : '<span class="muted">-</span>';
+    return `<tr class="${t.is_tesco?'tesco':''}"><td>${t.retailer}${t.is_tesco?' (you)':''}</td><td class="pm">£${t.base.toFixed(2)}</td><td class="pm">${promo}</td></tr>`;
+  }).join('');
+}
+function renderBeforeAfter(r){
+  const bl=r.bin_labels, ba=r.before_after_bins, bins=r.bins.filter(b=>b!=='__nobuy__');
+  const max=Math.max(1,...bins.map(b=>Math.max(ba.baseline[b]||0,ba.promo[b]||0)));
+  $('#beforeAfter').innerHTML=bins.map(b=>{
+    const bv=ba.baseline[b]||0, pv=ba.promo[b]||0, col=b==='tesco'?'var(--accent)':(b==='subs'?'var(--accent2)':(RETC[b]?RETC[b].color:'#8ea0c0'));
+    return `<div class="ba"><div class="nm">${bl[b]}</div><div class="track">
+      <i class="b" style="width:${Math.round(100*bv/max)}%"></i><i class="p" style="width:${Math.round(100*pv/max)}%;background:${col}"></i></div>
+      <div class="n">${bv} → ${pv}</div></div>`;
+  }).join('')+'<div class="legend"><span><i style="background:#8ea0c0"></i>before</span><span><i style="background:var(--accent)"></i>after</span></div>';
+}
+const FAC={price:'price / value',deal:'the deal',retailer:'store loyalty',appeal:'product appeal',social_proof:'social proof',convenience:'convenience'};
 function renderSamples(r){
   $('#samples').innerHTML=(r.samples||[]).map(s=>`<div class="sc">
     <div class="seglab" style="color:${s.color}">${s.segment}</div>
-    <div class="mv">says they care about <b>${s.stated_priority}</b> · switched from <b>${s.came_from}</b> → <b>${s.chose}</b></div>
+    <div class="mv">usually shops <b>${s.home}</b> · switched to Tesco from <b>${s.came_from}</b></div>
     ${s.top_reasons.map(t=>`<div class="rsn"><span>${FAC[t.factor]||t.factor}</span><span>${t.weight}</span></div>`).join('')}
   </div>`).join('')||'<div class="muted">No switchers to sample.</div>';
 }
 
 /* ---------- swarm animation ---------- */
-let dots=[], raf=null, bins=[];
-function binsOrder(){return SCN.products.map(p=>({id:p.id,name:p.name,promoted:p.id===TARGET})).concat([{id:'__nobuy__',name:'Walked away',nobuy:true}]);}
+let dots=[], raf=null, bins=[], DOTSP=10, DOTR=3.1;
 function setupBins(r){
-  bins=binsOrder();
-  $('#bins').innerHTML=bins.map(b=>`<div class="bin ${b.promoted?'promoted':''} ${b.nobuy?'nobuy':''}"><b>${b.name}</b><span class="ct" data-id="${b.id}">—</span></div>`).join('');
+  bins=r.bins.map(id=>({id,name:r.bin_labels[id],promoted:id==='tesco',nobuy:id==='__nobuy__'}));
+  $('#bins').innerHTML=bins.map(b=>`<div class="bin ${b.promoted?'promoted':''} ${b.nobuy?'nobuy':''}"><b>${b.name}</b><span class="ct" data-id="${b.id}">-</span></div>`).join('');
 }
-function cnt(choices){const m={};choices.forEach(c=>m[c]=(m[c]||0)+1);return m;}
+function cnt(a){const m={};a.forEach(c=>m[c]=(m[c]||0)+1);return m;}
+function computeSpacing(arrays){
+  const cv=$('#stage'),W=cv.clientWidth,H=cv.clientHeight,nb=bins.length,bw=W/nb,usableH=H-12;
+  let maxC=1; arrays.forEach(a=>{const m=cnt(a);Object.values(m).forEach(v=>{if(v>maxC)maxC=v;});});
+  const cap=s=>Math.max(1,Math.floor(usableH/s))*Math.max(1,Math.floor((bw-8)/s));
+  let sp=10; while(sp>2.2&&cap(sp)<maxC)sp-=0.3; DOTSP=sp; DOTR=Math.max(1.0,sp*0.34);
+}
 function layout(choices){
-  const cv=$('#stage'), W=cv.clientWidth, H=cv.clientHeight;
-  const nb=bins.length, bw=W/nb, sp=10, rows=Math.max(1,Math.floor((H-24)/sp));
-  const per={}; const pos=[];
-  bins.forEach(b=>per[b.id]=0);
-  choices.forEach((c)=>{
-    const bi=Math.max(0,bins.findIndex(b=>b.id===c));
-    const k=per[c]=(per[c]||0)+1; const idx=k-1;
-    const col=Math.floor(idx/rows), row=idx%rows;
-    const x=bi*bw+6+col*sp+ (sp/2);
-    const y=H-12-row*sp;
-    pos.push({x:Math.min(x,bi*bw+bw-4),y});
-  });
+  const cv=$('#stage'),W=cv.clientWidth,H=cv.clientHeight,nb=bins.length,bw=W/nb,sp=DOTSP,rows=Math.max(1,Math.floor((H-12)/sp));
+  const per={},pos=[];
+  choices.forEach(c=>{const bi=Math.max(0,bins.findIndex(b=>b.id===c));const k=per[c]=(per[c]||0)+1,idx=k-1;
+    const col=Math.floor(idx/rows),row=idx%rows;const x=bi*bw+4+sp/2+col*sp,y=H-10-row*sp;
+    pos.push({x:Math.min(x,bi*bw+bw-3),y:Math.max(6,y)});});
   return pos;
 }
-function dpr(cv){const r=cv.getBoundingClientRect();cv.width=r.width*devicePixelRatio;cv.height=r.height*devicePixelRatio;const c=cv.getContext('2d');c.setTransform(devicePixelRatio,0,0,devicePixelRatio,1,1);return c;}
-function setCounts(choices){const m=cnt(choices);$$('#bins .ct').forEach(el=>el.textContent=m[el.dataset.id]||0);}
+function dprctx(cv){const r=cv.getBoundingClientRect();cv.width=r.width*devicePixelRatio;cv.height=r.height*devicePixelRatio;const c=cv.getContext('2d');c.setTransform(devicePixelRatio,0,0,devicePixelRatio,1,1);return c;}
+function setCounts(a){const m=cnt(a);$$('#bins .ct').forEach(el=>el.textContent=m[el.dataset.id]||0);}
 function animate(r){
-  const cv=$('#stage'); const ctx=dpr(cv);
-  const colors=r.viz.colors;
-  const basePos=layout(r.viz.base), promoPos=layout(r.viz.promo);
-  if(dots.length!==colors.length){
-    dots=colors.map((col,i)=>({x:Math.random()*cv.clientWidth,y:Math.random()*cv.clientHeight,tx:basePos[i].x,ty:basePos[i].y,c:col}));
-  }else{dots.forEach((d,i)=>{d.tx=basePos[i].x;d.ty=basePos[i].y;});}
-  $('#phase').textContent='Baseline (no promo)'; setCounts(r.viz.base);
-  let phase=0;
-  clearTimeout(animate._t1);
-  animate._t1=setTimeout(()=>{dots.forEach((d,i)=>{d.tx=promoPos[i].x;d.ty=promoPos[i].y;});$('#phase').textContent='With promo → '+r.promoted.name;setCounts(r.viz.promo);},1500);
+  const cv=$('#stage'),ctx=dprctx(cv),colors=r.viz.colors;
+  computeSpacing([r.viz.base,r.viz.promo]);
+  const basePos=layout(r.viz.base),promoPos=layout(r.viz.promo);
+  if(dots.length!==colors.length){dots=colors.map((col,i)=>({x:Math.random()*cv.clientWidth,y:Math.random()*cv.clientHeight,tx:basePos[i].x,ty:basePos[i].y,c:col}));}
+  else{dots.forEach((d,i)=>{d.tx=basePos[i].x;d.ty=basePos[i].y;});}
+  $('#phase').textContent='Baseline (Tesco at base price)'; setCounts(r.viz.base);
+  clearTimeout(animate._t);
+  animate._t=setTimeout(()=>{dots.forEach((d,i)=>{d.tx=promoPos[i].x;d.ty=promoPos[i].y;});$('#phase').textContent='With Tesco promo';setCounts(r.viz.promo);},1500);
   cancelAnimationFrame(raf);
-  function frame(){
+  (function frame(){
     ctx.clearRect(0,0,cv.clientWidth,cv.clientHeight);
-    const nb=bins.length,bw=cv.clientWidth/nb;
-    // highlight the promoted bin
-    const pb=bins.findIndex(b=>b.promoted);
+    const nb=bins.length,bw=cv.clientWidth/nb,pb=bins.findIndex(b=>b.promoted);
     if(pb>=0){ctx.fillStyle='rgba(47,230,176,0.07)';ctx.fillRect(pb*bw,0,bw,cv.clientHeight);}
-    // bin separators
     ctx.strokeStyle='#162138';for(let i=1;i<nb;i++){ctx.beginPath();ctx.moveTo(i*bw,0);ctx.lineTo(i*bw,cv.clientHeight);ctx.stroke();}
-    let moving=0;
-    dots.forEach(d=>{d.x+=(d.tx-d.x)*0.14;d.y+=(d.ty-d.y)*0.14;if(Math.abs(d.tx-d.x)>0.6||Math.abs(d.ty-d.y)>0.6)moving++;
-      ctx.beginPath();ctx.fillStyle=d.c;ctx.globalAlpha=.9;ctx.arc(d.x,d.y,3.1,0,6.283);ctx.fill();});
-    ctx.globalAlpha=1;
-    raf=requestAnimationFrame(frame);
-  }
-  frame();
+    dots.forEach(d=>{d.x+=(d.tx-d.x)*0.14;d.y+=(d.ty-d.y)*0.14;ctx.beginPath();ctx.fillStyle=d.c;ctx.globalAlpha=.85;ctx.arc(d.x,d.y,DOTR,0,6.283);ctx.fill();});
+    ctx.globalAlpha=1; raf=requestAnimationFrame(frame);
+  })();
 }
 window.addEventListener('resize',()=>{if(LAST){setupBins(LAST);dots=[];animate(LAST);}});
 
-/* ---------- narrative ---------- */
 async function narrate(){
-  $('#tHead').textContent='Reading the swarm…'; $('#tBullets').innerHTML=''; $('#tRec').textContent=''; $('#tCav').textContent='';
-  $('#tSrc').innerHTML='<span class="thinking">● analysing behavioural signals…</span>';
+  $('#tHead').textContent='Reading the swarm…';$('#tBullets').innerHTML='';$('#tRec').textContent='';$('#tCav').textContent='';
+  $('#tSrc').innerHTML='<span class="thinking">● analysing…</span>';
   try{
     const n=await (await fetch('/api/narrate',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(req())})).json();
     $('#tHead').textContent=n.headline||'';
     $('#tBullets').innerHTML=(n.bullets||[]).map(b=>`<li>${b}</li>`).join('');
-    $('#tRec').textContent=n.recommendation||'';
-    $('#tCav').textContent=n.caveat||'';
+    $('#tRec').textContent=n.recommendation||''; $('#tCav').textContent=n.caveat||'';
     $('#tSrc').textContent='narration: '+(n.source||'');
-  }catch(e){$('#tHead').textContent='Narration unavailable (model offline) — the numbers above still stand.';$('#tSrc').textContent='';}
+  }catch(e){$('#tHead').textContent='Narration unavailable - the numbers above still stand.';$('#tSrc').textContent='';}
 }
-
 boot();
 </script>
 </body>

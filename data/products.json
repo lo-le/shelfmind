@@ -1,0 +1,150 @@
+{
+  "_note": "Illustrative, synthetic data. Tesco base price + competitor prices/promos are plausible placeholders, not live-scraped. Competitor value null = not stocked at that retailer. substitutes are Tesco's own alternative lines in the same need-state (used to measure cannibalisation).",
+  "products": [
+    {
+      "id": "kooky_mango",
+      "name": "Kooky Gently Dried Chew Mango",
+      "category": "Dried fruit snacking",
+      "appeal": {"base": 0.58, "health": 0.70, "novelty": 0.82, "taste": 0.74},
+      "tesco_base": 1.20,
+      "competitors": {
+        "sainsburys": {"base": 1.25, "promo": null},
+        "asda":       {"base": 1.20, "promo": {"type": "price_cut", "price": 1.00}},
+        "morrisons":  {"base": 1.30, "promo": null},
+        "aldi":       null,
+        "lidl":       null
+      },
+      "substitutes": [
+        {"name": "Tesco Dried Mango", "price": 1.00, "pull": 0.52, "volume": 240},
+        {"name": "Nakd-style Fruit Bar", "price": 1.10, "pull": 0.55, "volume": 200},
+        {"name": "Bear Fruit Rolls", "price": 1.00, "pull": 0.50, "volume": 170}
+      ]
+    },
+    {
+      "id": "welltruly_thins",
+      "name": "Well&Truly Thins Cheddar & Gouda Crackers",
+      "category": "Savoury crackers",
+      "appeal": {"base": 0.60, "health": 0.55, "novelty": 0.78, "taste": 0.80},
+      "tesco_base": 2.50,
+      "competitors": {
+        "sainsburys": {"base": 2.50, "promo": null},
+        "asda":       {"base": 2.50, "promo": {"type": "price_cut", "price": 2.00}},
+        "morrisons":  {"base": 2.60, "promo": null},
+        "aldi":       null,
+        "lidl":       null
+      },
+      "substitutes": [
+        {"name": "Tesco Cheese Crackers", "price": 1.50, "pull": 0.55, "volume": 260},
+        {"name": "Snack-a-Jacks-style Bites", "price": 1.40, "pull": 0.50, "volume": 210}
+      ]
+    },
+    {
+      "id": "proteinball_pb",
+      "name": "The Protein Ball Co. Peanut Butter Balls",
+      "category": "Protein snacking",
+      "appeal": {"base": 0.57, "health": 0.72, "novelty": 0.74, "taste": 0.70},
+      "tesco_base": 1.80,
+      "competitors": {
+        "sainsburys": {"base": 1.80, "promo": null},
+        "asda":       {"base": 1.80, "promo": null},
+        "morrisons":  {"base": 1.85, "promo": null},
+        "aldi":       null,
+        "lidl":       null
+      },
+      "substitutes": [
+        {"name": "Tesco Protein Bar", "price": 1.50, "pull": 0.52, "volume": 230},
+        {"name": "Trek-style Protein Flapjack", "price": 1.40, "pull": 0.55, "volume": 210}
+      ]
+    },
+    {
+      "id": "indi_brainbar",
+      "name": "Indi Brain Bar",
+      "category": "Functional snacking",
+      "appeal": {"base": 0.55, "health": 0.68, "novelty": 0.85, "taste": 0.64},
+      "tesco_base": 2.00,
+      "competitors": {
+        "sainsburys": {"base": 2.10, "promo": null},
+        "asda":       {"base": 2.00, "promo": null},
+        "morrisons":  null,
+        "aldi":       null,
+        "lidl":       null
+      },
+      "substitutes": [
+        {"name": "Tesco Oat & Seed Bar", "price": 1.20, "pull": 0.48, "volume": 200},
+        {"name": "Nature Valley-style Bar", "price": 1.30, "pull": 0.52, "volume": 240}
+      ]
+    },
+    {
+      "id": "allthatmatter_balls",
+      "name": "All That Matter Superfood Balls",
+      "category": "Protein snacking",
+      "appeal": {"base": 0.54, "health": 0.74, "novelty": 0.80, "taste": 0.66},
+      "tesco_base": 1.50,
+      "competitors": {
+        "sainsburys": {"base": 1.55, "promo": null},
+        "asda":       {"base": 1.50, "promo": {"type": "price_cut", "price": 1.25}},
+        "morrisons":  {"base": 1.60, "promo": null},
+        "aldi":       null,
+        "lidl":       null
+      },
+      "substitutes": [
+        {"name": "Tesco Energy Balls", "price": 1.30, "pull": 0.50, "volume": 220},
+        {"name": "The Protein Ball Co. (own competitor SKU)", "price": 1.80, "pull": 0.55, "volume": 180}
+      ]
+    },
+    {
+      "id": "hazy_ipa",
+      "name": "Hazy Pale IPA",
+      "category": "Craft beer",
+      "appeal": {"base": 0.62, "health": 0.20, "novelty": 0.80, "taste": 0.82},
+      "tesco_base": 2.20,
+      "competitors": {
+        "sainsburys": {"base": 2.20, "promo": null},
+        "asda":       {"base": 2.10, "promo": null},
+        "morrisons":  {"base": 2.30, "promo": null},
+        "aldi":       null,
+        "lidl":       null
+      },
+      "substitutes": [
+        {"name": "BrewDog-style Punk IPA", "price": 2.00, "pull": 0.62, "volume": 320},
+        {"name": "Tesco Craft Lager", "price": 1.50, "pull": 0.52, "volume": 280}
+      ]
+    },
+    {
+      "id": "willis_hotsauce",
+      "name": "Willy's Hot Sauce",
+      "category": "Condiments",
+      "appeal": {"base": 0.56, "health": 0.40, "novelty": 0.78, "taste": 0.80},
+      "tesco_base": 4.50,
+      "competitors": {
+        "sainsburys": {"base": 4.75, "promo": null},
+        "asda":       {"base": 4.50, "promo": null},
+        "morrisons":  null,
+        "aldi":       null,
+        "lidl":       null
+      },
+      "substitutes": [
+        {"name": "Encona-style Hot Sauce", "price": 1.50, "pull": 0.50, "volume": 200},
+        {"name": "Tabasco-style Sauce", "price": 2.50, "pull": 0.55, "volume": 230}
+      ]
+    },
+    {
+      "id": "fermentfizz_lemon",
+      "name": "Ferment Fizz Prebiotic Lemon Lemonade",
+      "category": "Functional soft drinks",
+      "appeal": {"base": 0.57, "health": 0.72, "novelty": 0.80, "taste": 0.70},
+      "tesco_base": 1.80,
+      "competitors": {
+        "sainsburys": {"base": 1.85, "promo": null},
+        "asda":       {"base": 1.80, "promo": null},
+        "morrisons":  {"base": 1.90, "promo": null},
+        "aldi":       null,
+        "lidl":       null
+      },
+      "substitutes": [
+        {"name": "Gut-health Soda (own label)", "price": 1.50, "pull": 0.52, "volume": 210},
+        {"name": "Classic Cloudy Lemonade", "price": 1.00, "pull": 0.56, "volume": 300}
+      ]
+    }
+  ]
+}

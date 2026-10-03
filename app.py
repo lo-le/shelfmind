@@ -1,11 +1,10 @@
 """
-Synthetic Shopper Swarm — FastAPI backend.
+ShelfMind - FastAPI backend (retailer-choice model).
 
-Serves the UI and two JSON endpoints:
-  POST /api/simulate  -> run the swarm (fast, deterministic maths)
-  POST /api/narrate   -> re-run the same scenario and add the LLM "human truth"
+  POST /api/simulate -> run the swarm (fast, deterministic maths)
+  POST /api/narrate  -> re-run the same scenario and add the LLM explanation
 
-The narrate endpoint recomputes from the same (scenario, promo, population, seed)
+The narrate endpoint recomputes from the same (product, promo, population, seed)
 inputs so it is fully reproducible and never trusts client-side numbers.
 """
 from __future__ import annotations
@@ -20,14 +19,13 @@ from pydantic import BaseModel
 import swarm
 from choice import PROMO_TYPES
 from explain import narrate
-from personas import generate_population, segment_table
+from personas import generate_population, retailer_table, segment_table
 
 BASE = pathlib.Path(__file__).parent
-SHELF = json.loads((BASE / "data" / "shelf.json").read_text(encoding="utf-8"))
-SCENARIOS = {s["id"]: s for s in SHELF["scenarios"]}
+PRODUCTS = json.loads((BASE / "data" / "products.json").read_text(encoding="utf-8"))["products"]
+BY_ID = {p["id"]: p for p in PRODUCTS}
 
-app = FastAPI(title="Synthetic Shopper Swarm")
-
+app = FastAPI(title="ShelfMind")
 _pop_cache: dict[tuple[int, int], list] = {}
 
 
@@ -39,20 +37,16 @@ def population(n: int, seed: int):
 
 
 class SimReq(BaseModel):
-    scenario_id: str
-    target: str
+    product_id: str
     promo: dict               # {"type": ..., "depth": ...}
-    population: int = 600
+    population: int = 1000
     seed: int = 7
 
 
 def _run(req: SimReq) -> dict:
-    sc = SCENARIOS[req.scenario_id]
+    product = BY_ID[req.product_id]
     agents = population(max(50, min(req.population, 2000)), req.seed)
-    res = swarm.simulate(agents, sc["products"], req.target, req.promo, seed=req.seed)
-    res["scenario_name"] = sc["name"]
-    res["products"] = sc["products"]
-    return res
+    return swarm.simulate(product, agents, req.promo, seed=req.seed)
 
 
 @app.get("/")
@@ -63,9 +57,11 @@ def index():
 @app.get("/api/bootstrap")
 def bootstrap():
     return {
-        "scenarios": SHELF["scenarios"],
-        "promo_types": {k: v["label"] for k, v in PROMO_TYPES.items()},
+        "products": [{"id": p["id"], "name": p["name"], "category": p["category"],
+                      "tesco_base": p["tesco_base"]} for p in PRODUCTS],
+        "promo_types": {k: v["label"] for k, v in PROMO_TYPES.items() if k != "none"},
         "segments": segment_table(),
+        "retailers": retailer_table(),
     }
 
 
@@ -77,7 +73,7 @@ def simulate(req: SimReq):
 @app.post("/api/narrate")
 def narrate_ep(req: SimReq):
     res = _run(req)
-    return narrate(res, res["scenario_name"])
+    return narrate(res)
 
 
 if __name__ == "__main__":

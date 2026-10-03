@@ -5,7 +5,7 @@
       "name": "Better-for-you chocolate",
       "category": "Confectionery",
       "description": "A market leader, a retailer value line, and three challenger brands fighting for the healthier-snacking shopper.",
-      "default_promo": {"target": "purebar", "type": "was_now", "depth": 0.25},
+      "default_promo": {"target": "purebar", "type": "price_cut", "depth": 0.25},
       "products": [
         {"id": "classic",     "name": "Classic Choc",            "brand": "Classic",   "owner": "Mondo",     "is_incumbent": true,  "price": 1.20, "ref_price": 1.20, "taste": 0.88, "familiarity": 0.95, "health": 0.12, "novelty": 0.08, "convenience": 0.85, "base_share": 0.40},
         {"id": "value",       "name": "Smartsave Milk Choc",     "brand": "Smartsave", "owner": "Retailer",  "is_incumbent": false, "price": 0.75, "ref_price": 0.85, "taste": 0.62, "familiarity": 0.70, "health": 0.15, "novelty": 0.15, "convenience": 0.80, "base_share": 0.18},

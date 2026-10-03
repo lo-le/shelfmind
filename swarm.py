@@ -1,224 +1,239 @@
 """
-The interacting swarm.
+The interacting swarm (retailer choice).
 
-Agents choose one at a time in a seeded random order. After each choice the
-product's *social proof* is updated, so later shoppers see what earlier shoppers
-bought. Social-proof-susceptible agents herd toward popular products, which can
-produce tipping points — a challenger brand that is ignored at low visibility
-can run away once it crosses a threshold. This emergence is the whole point of
-running a swarm rather than N independent draws.
+For one product, every shopper chooses where to buy it (Tesco, a competitor that
+stocks it, a Tesco substitute line) or not at all. They choose one at a time in a
+seeded order; each choice updates that option's social proof, so later shoppers
+can herd toward whatever is already popular.
 
-We score each scenario twice — baseline (no promo) and with the promo — reusing
-the SAME Gumbel noise per agent (the "common random numbers" variance-reduction
-trick). So the difference between the two runs is the causal effect of the
-promo, not noise, and we can trace exactly which shoppers switched and from
-where (true incremental vs cannibalised vs stolen-from-competitor vs pantry).
+We run it twice with the SAME shoppers and the SAME Gumbel noise (common random
+numbers): once with Tesco at base price, once with Tesco's promo. The difference
+is the causal effect of the Tesco promo, and because we can see each shopper's
+before and after choice we can split the promoted line's gain into:
+
+  - cannibalisation   : moved off a Tesco substitute (stays within Tesco)
+  - drawn from competitors : moved off another retailer (incremental to Tesco)
+  - new uplift        : was not going to buy at all (incremental demand)
+
+Net incremental to Tesco = drawn from competitors + new uplift.
 """
 from __future__ import annotations
 
 import numpy as np
 
 import choice as C
-from personas import DECLARABLE_LABEL
+from personas import RETAILERS, RETAILERS_BY_ID
 
-PRIOR_WEIGHT = 25.0      # strength of the starting social-proof prior
-SNAPSHOTS = 24          # trajectory samples for the tipping-point chart
-
-
-def _gumbel(rng: np.random.Generator, size: int) -> np.ndarray:
-    return rng.gumbel(0.0, 1.0, size=size)
+PRIOR_WEIGHT = 25.0
+SUB_ATTR = {"health": 0.35, "novelty": 0.25, "taste": 0.55}  # generic substitute feel
 
 
-def _run_pass(agents, products, promo_target, promo, max_price, seed):
-    """One swarm pass. Returns per-agent choices + a share trajectory."""
-    feats = []
-    for p in products:
-        this_promo = promo if (p["id"] == promo_target) else {"type": "none", "depth": 0.0}
-        feats.append(C.apply_promo(p, this_promo))
-    n_products = len(feats)
+def _competitor_eff(c: dict) -> tuple[float, float, float]:
+    """Return (eff_price, saving, salience) for a competitor offer."""
+    base = float(c["base"])
+    promo = c.get("promo")
+    if promo:
+        eff = float(promo["price"])
+        return eff, C.perceived_saving(base, eff), 1.3
+    return base, 0.0, 1.0
 
-    counts = np.zeros(n_products, dtype=float)
-    priors = np.array([f["base_share"] for f in feats], dtype=float)
+
+def build_options(product: dict, tesco_eff: float, tesco_saving: float,
+                  tesco_salience: float, tesco_units: int) -> list[dict]:
+    ap = product["appeal"]
+    opts: list[dict] = []
+    # 0: Tesco (the lever)
+    opts.append({
+        "retailer": "tesco", "kind": "promoted", "bin": "tesco",
+        "label": "Tesco", "eff_price": tesco_eff, "saving": tesco_saving,
+        "salience": tesco_salience, "units": tesco_units,
+        "appeal_base": ap["base"], "health": ap["health"], "novelty": ap["novelty"],
+        "taste": ap["taste"], "prior": RETAILERS_BY_ID["tesco"]["market_share"],
+    })
+    # competitors that stock it
+    for r in RETAILERS:
+        if r["id"] == "tesco":
+            continue
+        c = product["competitors"].get(r["id"])
+        if not c:
+            continue
+        eff, sav, sal = _competitor_eff(c)
+        opts.append({
+            "retailer": r["id"], "kind": "promoted", "bin": r["id"],
+            "label": r["name"], "eff_price": eff, "saving": sav, "salience": sal,
+            "units": 1, "appeal_base": ap["base"], "health": ap["health"],
+            "novelty": ap["novelty"], "taste": ap["taste"], "prior": r["market_share"],
+        })
+    # Tesco substitutes (for cannibalisation)
+    maxvol = max((s.get("volume", 100) for s in product["substitutes"]), default=100)
+    for s in product["substitutes"]:
+        opts.append({
+            "retailer": "tesco", "kind": "substitute", "bin": "subs",
+            "label": s["name"], "eff_price": float(s["price"]), "saving": 0.0,
+            "salience": 1.0, "units": 1, "appeal_base": float(s["pull"]),
+            "health": SUB_ATTR["health"], "novelty": SUB_ATTR["novelty"],
+            "taste": SUB_ATTR["taste"], "prior": 0.15 * s.get("volume", 100) / maxvol,
+        })
+    return opts
+
+
+def _tesco_offer(product: dict, promo: dict | None):
+    """Return (eff_price, saving, salience, units) for Tesco under a promo."""
+    base = float(product["tesco_base"])
+    ptype = (promo or {}).get("type", "none")
+    spec = C.PROMO_TYPES[ptype]
+    if ptype == "none":
+        return base, 0.0, 1.0, 1
+    depth = float((promo or {}).get("depth", 0.0))
+    eff = base * (1.0 - depth)
+    return eff, C.perceived_saving(base, eff), spec["saving_salience"], spec["units_required"]
+
+
+def _run_pass(agents, options, price_max, seed):
+    n_opt = len(options)
+    counts = np.zeros(n_opt, dtype=float)
+    priors = np.array([o["prior"] for o in options], dtype=float)
     buyers = 0.0
-
     order = np.random.default_rng(seed).permutation(len(agents))
-    snap_every = max(1, len(agents) // SNAPSHOTS)
-    trajectory = []
-
-    choices = [None] * len(agents)  # product index or -1 for no-buy
-    for step, ai in enumerate(order):
+    choices = [None] * len(agents)
+    for ai in order:
         agent = agents[int(ai)]
-        # live social proof = blend of running share and the starting prior
         sp = (counts + priors * PRIOR_WEIGHT) / (buyers + PRIOR_WEIGHT)
-
-        # paired Gumbel noise: same stream for this agent across baseline & promo
-        g = _gumbel(np.random.default_rng(seed * 100003 + int(ai)), n_products + 1)
-        utils = np.empty(n_products + 1)
-        for j, f in enumerate(feats):
-            utils[j] = C.deterministic_utility(agent, f, sp[j], max_price) + C.PARAMS["tau"] * g[j]
-        utils[n_products] = C.PARAMS["v_outside"] + C.PARAMS["tau"] * g[n_products]
-
+        g = np.random.default_rng(seed * 100003 + int(ai)).gumbel(0.0, 1.0, n_opt + 1)
+        utils = np.empty(n_opt + 1)
+        for j, o in enumerate(options):
+            utils[j] = C.deterministic_utility(agent, o, sp[j], price_max, RETAILERS_BY_ID) + C.PARAMS["tau"] * g[j]
+        utils[n_opt] = C.PARAMS["v_outside"] + C.PARAMS["tau"] * g[n_opt]
         pick = int(np.argmax(utils))
-        if pick == n_products:
+        if pick == n_opt:
             choices[int(ai)] = -1
         else:
             choices[int(ai)] = pick
             counts[pick] += 1.0
             buyers += 1.0
-
-        if step % snap_every == 0 or step == len(order) - 1:
-            denom = max(buyers, 1.0)
-            trajectory.append({
-                "n": step + 1,
-                "shares": {feats[j]["id"]: float(counts[j] / denom) for j in range(n_products)},
-            })
-
-    return {"feats": feats, "choices": choices, "counts": counts,
-            "buyers": buyers, "trajectory": trajectory}
+    return {"choices": choices, "counts": counts, "buyers": buyers}
 
 
-def simulate(agents, products, promo_target, promo, seed=7):
-    """Run baseline + promo passes and build the full result payload."""
-    max_price = max(float(p.get("ref_price", p["price"])) for p in products)
-    pid = {i: p["id"] for i, p in enumerate(products)}
-    owner = {i: p.get("owner", p["brand"]) for i, p in enumerate(products)}
-    names = {i: p["name"] for i, p in enumerate(products)}
-
-    base = _run_pass(agents, products, None, {"type": "none", "depth": 0.0}, max_price, seed)
-    test = _run_pass(agents, products, promo_target, promo, max_price, seed)
-
-    tgt = next(i for i, p in enumerate(products) if p["id"] == promo_target)
-
+def simulate(product: dict, agents: list[dict], promo: dict, seed: int = 7):
     n = len(agents)
-    def units(run):
-        u = {pid[j]: int(run["counts"][j]) for j in range(len(products))}
-        u["__nobuy__"] = int(n - run["buyers"])
-        return u
+    sub_prices = [float(s["price"]) for s in product["substitutes"]]
+    comp_bases = [float(c["base"]) for c in product["competitors"].values() if c]
+    price_max = max([float(product["tesco_base"])] + comp_bases + sub_prices)
 
-    base_u, test_u = units(base), units(test)
+    base_opts = build_options(product, float(product["tesco_base"]), 0.0, 1.0, 1)
+    t_eff, t_sav, t_sal, t_units = _tesco_offer(product, promo)
+    promo_opts = build_options(product, t_eff, t_sav, t_sal, t_units)
 
-    # --- switching decomposition for the promoted product ----------------
-    gained_from = {"new_to_category": 0, "cannibalised": 0, "from_competitor": 0}
-    lost = 0
-    switchers = []  # sample of shoppers who moved onto the promo
+    base = _run_pass(agents, base_opts, price_max, seed)
+    test = _run_pass(agents, promo_opts, price_max, seed)
+
+    bins = ["tesco"] + [o["retailer"] for o in base_opts if o["bin"] not in ("tesco", "subs")] + ["subs", "__nobuy__"]
+    opt_bin = {j: o["bin"] for j, o in enumerate(base_opts)}
+
+    def bin_counts(run):
+        bc = {b: 0 for b in bins}
+        for ci in run["choices"]:
+            bc[opt_bin[ci] if ci != -1 else "__nobuy__"] += 1
+        return bc
+
+    base_bins, promo_bins = bin_counts(base), bin_counts(test)
+
+    # --- decomposition of Tesco's promoted line (option index 0) ----------
+    cannibalised = 0
+    new_uplift = 0
+    defected = 0
+    from_competitor = {}
+    seg_gain = {}
+    switchers = []
     for ai in range(n):
         b, t = base["choices"][ai], test["choices"][ai]
-        if t == tgt and b != tgt:
+        if t == 0 and b != 0:
             if b == -1:
-                gained_from["new_to_category"] += 1
-            elif owner[b] == owner[tgt]:
-                gained_from["cannibalised"] += 1
+                new_uplift += 1
+            elif base_opts[b]["kind"] == "substitute":
+                cannibalised += 1
             else:
-                gained_from["from_competitor"] += 1
+                rid = base_opts[b]["retailer"]
+                from_competitor[rid] = from_competitor.get(rid, 0) + 1
+            seg_gain[agents[ai]["segment"]] = seg_gain.get(agents[ai]["segment"], 0) + 1
             if len(switchers) < 40:
-                switchers.append({"agent": ai, "from": "walked away" if b == -1 else names[b]})
-        elif b == tgt and t != tgt:
-            lost += 1
+                switchers.append({"agent": ai, "from_bin": "did not buy" if b == -1 else base_opts[b]["label"]})
+        elif b == 0 and t != 0:
+            defected += 1
 
-    incremental = base_u["__nobuy__"] - test_u["__nobuy__"]  # category growth
-    target_gain = test_u[pid[tgt]] - base_u[pid[tgt]]
+    tesco_base_units = int(base["counts"][0])
+    tesco_promo_units = int(test["counts"][0])
+    gain = tesco_promo_units - tesco_base_units
+    comp_total = sum(from_competitor.values())
+    net_incremental = comp_total + new_uplift
 
-    # --- say-do gap -------------------------------------------------------
-    def say_do(run):
-        contradictions, counts_by = 0, 0
-        by_priority = {}
-        cheapest = min(f["eff_price"] for f in run["feats"])
-        for ai in range(n):
-            c = run["choices"][ai]
-            if c == -1:
-                continue
-            counts_by += 1
-            sp = agents[ai]["stated_priority"]
-            f = run["feats"][c]
-            if sp == "value":
-                # says price matters most, but paid >20% more than the cheapest option
-                contradiction = f["eff_price"] > 1.2 * cheapest
-            elif sp == "habit_loyalty":
-                contradiction = f["familiarity"] < 0.45
-            else:  # health / taste / novelty are product scores
-                contradiction = f[sp] < 0.45
-            by_priority.setdefault(sp, {"n": 0, "gap": 0})
-            by_priority[sp]["n"] += 1
-            if contradiction:
-                contradictions += 1
-                by_priority[sp]["gap"] += 1
-        pct = (contradictions / counts_by * 100.0) if counts_by else 0.0
-        return pct, by_priority
+    # --- price table (static, from the db) --------------------------------
+    price_table = [{
+        "retailer": "Tesco", "id": "tesco", "stocked": True,
+        "base": float(product["tesco_base"]),
+        "promo": round(t_eff, 2) if promo and promo.get("type", "none") != "none" else None,
+        "is_tesco": True,
+    }]
+    for r in RETAILERS:
+        if r["id"] == "tesco":
+            continue
+        c = product["competitors"].get(r["id"])
+        if not c:
+            price_table.append({"retailer": r["name"], "id": r["id"], "stocked": False,
+                                "base": None, "promo": None, "is_tesco": False})
+        else:
+            promo_price = float(c["promo"]["price"]) if c.get("promo") else None
+            price_table.append({"retailer": r["name"], "id": r["id"], "stocked": True,
+                                "base": float(c["base"]), "promo": promo_price, "is_tesco": False})
 
-    base_gap, _ = say_do(base)
-    test_gap, test_gap_by = say_do(test)
-
-    # headline say-do example (largest contradicting group under the promo)
-    say_do_headline = None
-    best = None
-    for sp, d in test_gap_by.items():
-        if d["n"] >= 15 and (best is None or d["gap"] / d["n"] > best[1]):
-            best = (sp, d["gap"] / d["n"], d["n"], d["gap"])
-    if best:
-        sp, rate, grp_n, grp_gap = best
-        say_do_headline = {
-            "stated": DECLARABLE_LABEL[sp],
-            "pct": round(rate * 100.0),
-            "group_n": grp_n,
-        }
-
-    # --- segment breakdown of who bought the promoted product -------------
-    seg_gain = {}
-    for ai in range(n):
-        if test["choices"][ai] == tgt and base["choices"][ai] != tgt:
-            s = agents[ai]["segment"]
-            seg_gain[s] = seg_gain.get(s, 0) + 1
-
-    # --- a few sample shoppers (with reasoning) for the drill-down --------
+    # --- sample switchers with reasoning ----------------------------------
     samples = []
     for s in switchers[:6]:
         ai = s["agent"]
         agent = agents[ai]
-        c = test["choices"][ai]
-        f = test["feats"][c]
-        sp_val = (test["counts"][c] + f["base_share"] * PRIOR_WEIGHT) / (max(test["buyers"], 1.0) + PRIOR_WEIGHT)
-        terms = C.utility_terms(agent, f, sp_val, max_price)
+        sp0 = (test["counts"][0] + promo_opts[0]["prior"] * PRIOR_WEIGHT) / (max(test["buyers"], 1.0) + PRIOR_WEIGHT)
+        terms = C.utility_terms(agent, promo_opts[0], sp0, price_max, RETAILERS_BY_ID)
         top = sorted(((k, v) for k, v in terms.items() if k != "budget"),
                      key=lambda kv: kv[1], reverse=True)[:3]
         samples.append({
             "segment": agent["segment"], "color": agent["color"],
-            "stated_priority": DECLARABLE_LABEL[agent["stated_priority"]],
-            "chose": f["name"], "came_from": s["from"],
+            "home": RETAILERS_BY_ID[agent["home_retailer"]]["name"],
+            "came_from": s["from_bin"],
             "top_reasons": [{"factor": k, "weight": round(float(v), 2)} for k, v in top],
         })
 
-    # --- capped per-shopper choices for the swarm animation --------------
-    disp = min(n, 420)
-    def _pid(ci):
-        return products[ci]["id"] if ci != -1 else "__nobuy__"
+    # --- viz: one dot per agent, bin = where they bought ------------------
+    def _bin(ci):
+        return opt_bin[ci] if ci != -1 else "__nobuy__"
     viz = {
-        "colors": [agents[i]["color"] for i in range(disp)],
-        "segments": [agents[i]["segment"] for i in range(disp)],
-        "base": [_pid(base["choices"][i]) for i in range(disp)],
-        "promo": [_pid(test["choices"][i]) for i in range(disp)],
+        "colors": [agents[i]["color"] for i in range(n)],
+        "base": [_bin(base["choices"][i]) for i in range(n)],
+        "promo": [_bin(test["choices"][i]) for i in range(n)],
     }
 
+    bin_labels = {"tesco": "Tesco", "subs": "Tesco substitutes", "__nobuy__": "Did not buy"}
+    for r in RETAILERS:
+        bin_labels.setdefault(r["id"], r["name"])
+
     return {
-        "promoted": {"id": products[tgt]["id"], "name": names[tgt],
-                     "owner": owner[tgt]},
-        "viz": viz,
+        "product": {"id": product["id"], "name": product["name"], "category": product["category"]},
         "promo": promo,
-        "units": {"baseline": base_u, "promo": test_u},
-        "target_gain": target_gain,
-        "incremental_demand": incremental,         # net new buyers to the category
+        "tesco_units": {"baseline": tesco_base_units, "promo": tesco_promo_units, "gain": gain},
         "decomposition": {
-            **gained_from,
-            "defected": lost,
+            "cannibalised": cannibalised,
+            "from_competitor": from_competitor,
+            "from_competitor_total": comp_total,
+            "new_uplift": new_uplift,
+            "defected": defected,
+            "gross_inflow": cannibalised + comp_total + new_uplift,
+            "net_incremental": net_incremental,
         },
-        "say_do": {
-            "baseline_pct": round(base_gap, 1),
-            "promo_pct": round(test_gap, 1),
-            "headline": say_do_headline,
-        },
+        "price_table": price_table,
         "segment_gain": seg_gain,
-        "trajectory": test["trajectory"],
-        "baseline_trajectory": base["trajectory"],
+        "before_after_bins": {"baseline": base_bins, "promo": promo_bins},
+        "bins": bins,
+        "bin_labels": bin_labels,
         "samples": samples,
-        "product_names": names,
+        "viz": viz,
         "n_agents": n,
     }
